@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Interview Agent - Test UI</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .status-dot.speaking {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.listening {
+            background: var(--primary);
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.error {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .conversation {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+        }
+
+        .message.agent {
+            background: linear-gradient(135deg, var(--primary) 0%, #818cf8 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.system {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--warning);
+            text-align: center;
+            max-width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .message-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+
+        .message-text {
+            line-height: 1.5;
+        }
+
+        .urdu {
+            font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif;
+            direction: rtl;
+            font-size: 1.1rem;
+        }
+
+        .audio-visualizer {
+            height: 60px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .bar {
+            width: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: height 0.1s;
+        }
+
+        .recording .bar {
+            animation: wave 0.5s infinite ease-in-out;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                height: 10px;
+            }
+
+            50% {
+                height: 40px;
+            }
+        }
+
+        .bar:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        .bar:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        .bar:nth-child(7) {
+            animation-delay: 0.6s;
+        }
+
+        .bar:nth-child(8) {
+            animation-delay: 0.7s;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-label {
+            color: var(--text-muted);
+        }
+
+        .result-value {
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Hidden audio element for agent speech */
+        #agentAudio {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🎙️ Voice Interview Agent</h1>
+            <p class="subtitle">Bilingual Legal Intake System (Urdu/English)</p>
+        </header>
+
+        <div class="card">
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot" id="connectionDot"></span>
+                    <span id="connectionStatus">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="agentDot"></span>
+                    <span id="agentStatus">Idle</span>
+                </div>
+                <div class="status-item">
+                    <span>Session: <span id="sessionId">-</span></span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <!-- Language Selection Toggle -->
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; justify-content: center;">
+                    <button id="langUrdu"
+                        style="padding: 10px 20px; border-radius: 8px; border: 2px solid var(--primary); background: var(--primary); color: white; cursor: pointer; font-weight: bold;">
+                        Urdu
+                    </button>
+                    <button id="langEnglish"
+                        style="padding: 10px 20px; border-radius: 8px; border: 2px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; font-weight: bold;">
+                        English
+                    </button>
+                </div>
+                <div style="text-align: center; margin-bottom: 15px; color: var(--text-muted);">
+                    Interview Language: <strong id="langDisplayText">Urdu</strong>
+                </div>
+                <button id="startBtn" class="btn-primary" onclick="startInterview()">
+                    ▶️ Start Interview
+                </button>
+                <button id="speakBtn" class="btn-success" onclick="toggleRecording()" disabled>
+                    🎤 Hold to Speak
+                </button>
+                <button id="doneBtn" class="btn-primary" onclick="userFinished()" disabled>
+                    ✓ Done Speaking
+                </button>
+                <button id="endBtn" class="btn-danger" onclick="endInterview()" disabled>
+                    ⏹️ End Interview
+                </button>
+            </div>
+
+            <div class="audio-visualizer" id="visualizer">
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 20px;"></div>
+                <div class="bar" style="height: 15px;"></div>
+                <div class="bar" style="height: 25px;"></div>
+                <div class="bar" style="height: 18px;"></div>
+                <div class="bar" style="height: 30px;"></div>
+                <div class="bar" style="height: 12px;"></div>
+                <div class="bar" style="height: 22px;"></div>
+            </div>
+
+            <div class="conversation" id="conversation">
+                <div class="message system">
+                    <div class="message-text">Click "Start Interview" to begin. The agent will speak first.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card results" id="resultsCard">
+            <h2 style="margin-bottom: 16px;">📊 Interview Results</h2>
+            <div class="result-item">
+                <span class="result-label">Legal Domain</span>
+                <span class="result-value" id="resultDomain">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Confidence</span>
+                <span class="result-value" id="resultConfidence">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Urgency</span>
+                <span class="result-value" id="resultUrgency">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">ADR Suitable</span>
+                <span class="result-value" id="resultADR">-</span>
+            </div>
+            <div style="margin-top: 16px;">
+                <span class="result-label">Summary:</span>
+                <p id="resultSummary" style="margin-top: 8px; line-height: 1.6;">-</p>
+            </div>
+        </div>
+    </div>
+
+    <audio id="agentAudio"></audio>
+
+    <script>
+        // Configuration
+        const API_BASE = window.location.origin;
+        const WS_BASE = window.location.origin.replace('http', 'ws');
+
+        // State
+        let ws = null;
+        let sessionId = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let canSpeak = false;
+        let agentIsPlaying = false;  // Track when agent audio is playing
+        let selectedLanguage = 'Urdu';  // Default to Urdu
+
+        // Language Selection
+        document.getElementById('langUrdu').addEventListener('click', () => selectLanguage('Urdu'));
+        document.getElementById('langEnglish').addEventListener('click', () => selectLanguage('English'));
+
+        function selectLanguage(lang) {
+            selectedLanguage = lang;
+            // Update button styles
+            const urduBtn = document.getElementById('langUrdu');
+            const engBtn = document.getElementById('langEnglish');
+            if (lang === 'Urdu') {
+                urduBtn.style.background = 'var(--primary)';
+                urduBtn.style.color = 'white';
+                engBtn.style.background = 'transparent';
+                engBtn.style.color = 'var(--primary)';
+            } else {
+                engBtn.style.background = 'var(--primary)';
+                engBtn.style.color = 'white';
+                urduBtn.style.background = 'transparent';
+                urduBtn.style.color = 'var(--primary)';
+            }
+            document.getElementById('langDisplayText').textContent = lang;
+            console.log('Language selected:', lang);
+        }
+
+        // DOM Elements
+        const startBtn = document.getElementById('startBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const doneBtn = document.getElementById('doneBtn');
+        const endBtn = document.getElementById('endBtn');
+        const conversation = document.getElementById('conversation');
+        const connectionDot = document.getElementById('connectionDot');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const agentDot = document.getElementById('agentDot');
+        const agentStatus = document.getElementById('agentStatus');
+        const visualizer = document.getElementById('visualizer');
+        const agentAudio = document.getElementById('agentAudio');
+
+        // Start Interview
+        async function startInterview() {
+            try {
+                addMessage('system', 'Creating session...');
+
+                // Create session with language preference
+                const response = await fetch(`${API_BASE}/api/v1/sessions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id: 'test_ui_' + Date.now(),
+                        metadata: {
+                            language: selectedLanguage,
+                            source: 'test_ui'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                sessionId = data.session_id;
+                document.getElementById('sessionId').textContent = sessionId.substring(0, 8) + '...';
+
+                addMessage('system', 'Session created! Connecting to WebSocket...');
+
+                // Connect WebSocket
+                ws = new WebSocket(`${WS_BASE}/api/v1/ws/${sessionId}`);
+
+                ws.onopen = () => {
+                    console.log("WS open, sending ping test")
+                    ws.send(JSON.stringify({ type: 'ping_from_client', t: Date.now() }));
+                    connectionDot.classList.add('connected');
+                    connectionStatus.textContent = 'Connected';
+                    startBtn.disabled = true;
+                    endBtn.disabled = false;
+                    addMessage('system', 'Connected! Waiting for agent...');
+                };
+
+                ws.onmessage = handleWebSocketMessage;
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    connectionDot.classList.remove('connected');
+                    connectionDot.classList.add('error');
+                    connectionStatus.textContent = 'Error';
+                    addMessage('system', 'Connection error! Check if server is running.');
+                };
+
+                ws.onclose = () => {
+                    connectionDot.classList.remove('connected');
+                    connectionStatus.textContent = 'Disconnected';
+                    speakBtn.disabled = true;
+                    doneBtn.disabled = true;
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('system', 'Failed to start: ' + error.message);
+            }
+        }
+
+        // Handle WebSocket Messages
+        function handleWebSocketMessage(event) {
+            const msg = JSON.parse(event.data);
+            console.log('Received:', msg);
+
+            switch (msg.type) {
+                case 'agent_speech':
+                    handleAgentSpeech(msg);
+                    break;
+
+                case 'conversation_status':
+                    handleConversationStatus(msg);
+                    break;
+
+                case 'transcript':
+                    if (msg.is_final) {
+                        addMessage('user', msg.text);
+                    }
+                    break;
+
+                case 'results':
+                    handleResults(msg);
+                    break;
+
+                case 'error':
+                    addMessage('system', `Error: ${msg.message_en}`);
+                    break;
+
+                case 'status':
+                    addMessage('system', msg.message_en);
+                    break;
+            }
+        }
+
+        // Handle Agent Speech
+        function handleAgentSpeech(msg) {
+            // Display text
+            addMessage('agent', msg.text, msg.language === 'ur-PK');
+
+            // Play audio
+            if (msg.audio) {
+                try {
+                    agentIsPlaying = true; // Block recording while playing
+                    const audioBlob = base64ToBlob(msg.audio, 'audio/mpeg');
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    agentAudio.src = audioUrl;
+
+                    // When audio finishes, allow recording
+                    agentAudio.onended = () => {
+                        agentIsPlaying = false;
+                        console.log('Agent finished speaking, ready to listen');
+                    };
+
+                    agentAudio.play().catch(e => {
+                        console.log('Audio autoplay blocked:', e);
+                        agentIsPlaying = false; // Reset if play fails
+                    });
+                } catch (e) {
+                    console.error('Error playing audio:', e);
+                    agentIsPlaying = false;
+                }
+            }
+        }
+
+        // Handle Conversation Status
+        function handleConversationStatus(msg) {
+            canSpeak = msg.can_speak;
+
+            // Update agent status
+            agentDot.className = 'status-dot';
+
+            switch (msg.agent_state) {
+                case 'speaking':
+                    agentDot.classList.add('speaking');
+                    agentStatus.textContent = 'Agent Speaking';
+                    speakBtn.disabled = true;
+                    doneBtn.disabled = true;
+                    break;
+
+                case 'listening':
+                    agentDot.classList.add('listening');
+                    agentStatus.textContent = 'Your Turn - Listening...';
+                    speakBtn.disabled = false;
+                    doneBtn.disabled = false;
+
+                    // AUTO-LISTEN: Wait for agent audio to finish, then start recording
+                    waitForAgentToFinishThenListen();
+                    break;
+
+                case 'thinking':
+                    agentStatus.textContent = 'Processing...';
+                    speakBtn.disabled = true;
+                    doneBtn.disabled = true;
+                    break;
+
+                case 'complete':
+                    agentStatus.textContent = 'Complete';
+                    speakBtn.disabled = true;
+                    doneBtn.disabled = true;
+                    endBtn.disabled = true;
+                    break;
+            }
+        }
+
+        // Handle Results
+        function handleResults(msg) {
+            const resultsCard = document.getElementById('resultsCard');
+            resultsCard.classList.add('show');
+
+            if (msg.analysis) {
+                document.getElementById('resultDomain').textContent = msg.analysis.legal_domain || '-';
+                document.getElementById('resultConfidence').textContent =
+                    msg.analysis.confidence_score ? (msg.analysis.confidence_score * 100).toFixed(0) + '%' : '-';
+                document.getElementById('resultUrgency').textContent = msg.analysis.urgency || '-';
+                document.getElementById('resultADR').textContent = msg.analysis.adr_suitable ? 'Yes' : 'No';
+                document.getElementById('resultSummary').textContent = msg.analysis.issue_summary || '-';
+            }
+
+            addMessage('system', 'Interview complete! Results above.');
+        }
+
+        // Toggle Recording
+        async function toggleRecording() {
+            if (!canSpeak) {
+                addMessage('system', 'Wait for agent to finish speaking');
+                return;
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        }
+
+        // Start Recording
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const total = audioChunks.reduce((s, c) => s + c.size, 0);
+                    console.log("onstop fired. chunks=", audioChunks.length, " total bytes=", total);
+
+                    cleanup();
+
+                    try {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioBuffer = await audioBlob.arrayBuffer();
+                        const base64Audio = arrayBufferToBase64(audioBuffer);
+
+                        if (audioChunks.length > 0 && ws && ws.readyState === WebSocket.OPEN) {
+                            console.log("✅ sending audio over WS, bytes=", total, "wsState=", ws?.readyState);
+                            ws.send(JSON.stringify({
+                                type: 'audio',
+                                audio: base64Audio,
+                                sequence: Date.now()
+                            }));
+                            ws.send(JSON.stringify({ type: 'user_finished', silence_duration: 1.5 }));
+                        } else {
+                            console.log("❌ Not sending audio: chunks=", audioChunks.length);
+                        }
+                    } catch (error) {
+                        console.error('Error processing audio:', error);
+                        addMessage('system', 'Error processing audio recording');
+                    }
+                };
+
+                mediaRecorder.start(); // Record in 1 second chunks
+                isRecording = true;
+                speakBtn.textContent = '🔴 Recording...';
+                speakBtn.classList.remove('btn-success');
+                speakBtn.classList.add('btn-danger');
+                visualizer.classList.add('recording');
+
+            } catch (error) {
+                console.error('Recording error:', error);
+                addMessage('system', 'Microphone access denied');
+            }
+        }
+
+        // Wait for agent audio to finish before listening
+        function waitForAgentToFinishThenListen() {
+            if (isRecording) return; // Already recording
+
+            if (agentIsPlaying) {
+                // Agent still speaking, wait and check again
+                agentStatus.textContent = 'Agent speaking...';
+                setTimeout(waitForAgentToFinishThenListen, 200);
+            } else {
+                // Agent done, wait a moment then start listening
+                setTimeout(() => {
+                    if (canSpeak && !isRecording && !agentIsPlaying) {
+                        startAutoRecording();
+                    }
+                }, 300); // Small delay after audio ends
+            }
+        }
+
+        // ============================================================
+        // ChatGPT/Siri-Style Voice Mode
+        // ============================================================
+        // Key behavior:
+        // 1. Wait for user to START speaking (voice activity detection)
+        // 2. Only start silence timer AFTER user has spoken
+        // 3. Stop recording after silence following speech
+        // ============================================================
+
+        let audioContext = null;
+        let analyser = null;
+        let silenceCheckInterval = null;
+
+        // Voice detection states
+        let hasUserStartedSpeaking = false;  // Has user started talking yet?
+        let silenceStart = null;              // When did silence begin?
+
+        // Thresholds (tune these based on testing)
+        const SPEECH_THRESHOLD = 15;    // Volume level to detect speech
+        const SILENCE_THRESHOLD = 8;    // Volume level considered silence
+        const SILENCE_DURATION = 1500;  // 1.5 seconds of silence after speaking = done
+
+        async function startAutoRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Set up audio analysis
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                analyser.fftSize = 256;
+
+                // Set up MediaRecorder
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    cleanup();
+
+                    // Only send if user actually spoke something
+                    if (hasUserStartedSpeaking && audioChunks.length > 0) {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioBuffer = await audioBlob.arrayBuffer();
+                        const base64Audio = arrayBufferToBase64(audioBuffer);
+
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            // Send audio
+                            ws.send(JSON.stringify({
+                                type: 'audio',
+                                audio: base64Audio,
+                                sequence: Date.now()
+                            }));
+                            // Signal we're done speaking
+                            ws.send(JSON.stringify({
+                                type: 'user_finished',
+                                silence_duration: 1.5
+                            }));
+                        }
+                    }
+                };
+
+                // Reset state
+                hasUserStartedSpeaking = false;
+                silenceStart = null;
+
+                // Start recording
+                mediaRecorder.start(); // no timeslice => single clean container
+                isRecording = true;
+
+                // Update UI
+                speakBtn.textContent = '🎤 Waiting for you...';
+                speakBtn.classList.remove('btn-success');
+                speakBtn.classList.add('btn-danger');
+                visualizer.classList.add('recording');
+                addMessage('system', '🎤 Listening... Speak now! (I\'ll know when you\'re done)');
+
+                // Start voice activity detection loop
+                silenceCheckInterval = setInterval(() => {
+                    if (!analyser || !isRecording) return;
+
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(dataArray);
+                    const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+                    // Update visualizer based on volume
+                    updateVisualizer(volume);
+
+                    if (!hasUserStartedSpeaking) {
+                        // STATE 1: Waiting for user to start speaking
+                        if (volume > SPEECH_THRESHOLD) {
+                            hasUserStartedSpeaking = true;
+                            silenceStart = null;
+                            speakBtn.textContent = '🔴 Recording...';
+                            console.log('Voice detected! Recording started.');
+                        }
+                    } else {
+                        // STATE 2: User has started speaking, detect when they stop
+                        if (volume < SILENCE_THRESHOLD) {
+                            // Silence detected
+                            if (!silenceStart) {
+                                silenceStart = Date.now();
+                            } else if (Date.now() - silenceStart > SILENCE_DURATION) {
+                                // Silence long enough - they're done
+                                console.log('Silence after speech detected. Processing...');
+                                stopAutoRecording();
+                            }
+                        } else {
+                            // Still speaking, reset silence timer
+                            silenceStart = null;
+                        }
+                    }
+                }, 50); // Check every 50ms for responsiveness
+
+            } catch (error) {
+                console.error('Auto-recording error:', error);
+                addMessage('system', '❌ Microphone access denied. Please allow microphone access and try again.');
+            }
+        }
+
+        function updateVisualizer(volume) {
+            // Animate the visualizer bars based on volume
+            const bars = visualizer.querySelectorAll('.bar');
+            bars.forEach((bar, i) => {
+                const height = Math.max(10, Math.min(50, volume * (1 + Math.random() * 0.5)));
+                bar.style.height = height + 'px';
+            });
+        }
+
+        function cleanup() {
+            if (silenceCheckInterval) {
+                clearInterval(silenceCheckInterval);
+                silenceCheckInterval = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
+        function stopAutoRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                speakBtn.textContent = '🎤 Hold to Speak';
+                speakBtn.classList.remove('btn-danger');
+                speakBtn.classList.add('btn-success');
+                visualizer.classList.remove('recording');
+
+                console.log("stopAutoRecording called. isRecording=", isRecording, "state=", mediaRecorder?.state);
+
+                if (hasUserStartedSpeaking) {
+                    addMessage('system', '⏳ Processing your response...');
+                }
+            }
+        }
+
+        // Stop Recording
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                speakBtn.textContent = '🎤 Hold to Speak';
+                speakBtn.classList.remove('btn-danger');
+                speakBtn.classList.add('btn-success');
+                visualizer.classList.remove('recording');
+                // If we haven't already, send user_finished to advance the turn
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'user_finished',
+                        silence_duration: 1.5
+                    }));
+                }
+            }
+        }
+
+        // User Finished Speaking
+        function userFinished() {
+            stopRecording();
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'user_finished',
+                    silence_duration: 2.0
+                }));
+            }
+
+            speakBtn.disabled = true;
+            doneBtn.disabled = true;
+            addMessage('system', 'Processing your response...');
+        }
+
+        // End Interview
+        function endInterview() {
+            stopRecording();
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'end_interview' }));
+            }
+
+            speakBtn.disabled = true;
+            doneBtn.disabled = true;
+            endBtn.disabled = true;
+        }
+
+        // Add Message to Conversation
+        function addMessage(role, text, isUrdu = false) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+
+            let roleLabel = role === 'agent' ? 'Agent' : (role === 'user' ? 'You' : 'System');
+
+            div.innerHTML = `
+                <div class="message-role">${roleLabel}</div>
+                <div class="message-text ${isUrdu ? 'urdu' : ''}">${text}</div>
+            `;
+
+            conversation.appendChild(div);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        // Utility Functions
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        function base64ToBlob(base64, mimeType) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return new Blob([bytes], { type: mimeType });
+        }
+    </script>
+</body>
+
+</html>
