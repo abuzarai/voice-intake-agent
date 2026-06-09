@@ -78,7 +78,8 @@ Browser (Microphone)
 
 ---
 
-## 🔌 API Reference
+<details>
+<summary>API Reference</summary>
 
 ### REST Endpoints
 
@@ -204,6 +205,8 @@ Simpler flow: client records the entire response, sends all audio, then signals 
 CLIENT: send full audio as chunks → send end_interview
 SERVER: transcribes entire audio → Gemini analysis → return results
 ```
+
+</details>
 
 ---
 
