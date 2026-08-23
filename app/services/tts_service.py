@@ -1,132 +1,97 @@
-"""Google Cloud Text-to-Speech service."""
+"""Text-to-Speech service using edge-tts (Microsoft neural voices, free).
 
+Replaces Google Cloud Text-to-Speech. Public surface preserved:
+    tts_service.synthesize_speech(text, language, speaking_rate) -> bytes (mp3)
+    tts_service.synthesize_to_base64(text, language) -> str
+"""
+
+import asyncio
 import base64
-from google.cloud import texttospeech
+from typing import Dict
+
+import edge_tts
 from app.utils import get_logger
 
 logger = get_logger(__name__)
 
 
 class TTSService:
-    """Text-to-Speech service using Google Cloud."""
-    
-    def __init__(self):
-        """Initialize TTS client."""
-        self.client = texttospeech.TextToSpeechClient()
-        
-        # Voice configurations
-        # NOTE: Google TTS has Urdu voices as ur-IN (India), not ur-PK (Pakistan)
-        self.voices = {
-            "ur-IN": {
-                "language_code": "ur-IN",
-                "name": "ur-IN-Wavenet-A",  # Female voice
-                "ssml_gender": texttospeech.SsmlVoiceGender.FEMALE
-            },
-            "ur-PK": {  # Fallback - use ur-IN voices for Pakistani Urdu
-                "language_code": "ur-IN",
-                "name": "ur-IN-Wavenet-A",
-                "ssml_gender": texttospeech.SsmlVoiceGender.FEMALE
-            },
-            "ur": {  # Generic Urdu fallback
-                "language_code": "ur-IN",
-                "name": "ur-IN-Wavenet-A",
-                "ssml_gender": texttospeech.SsmlVoiceGender.FEMALE
-            },
-            "en-US": {
-                "language_code": "en-US",
-                "name": "en-US-Wavenet-D",  # Male voice
-                "ssml_gender": texttospeech.SsmlVoiceGender.MALE
-            },
-            "en": {  # Generic English fallback
-                "language_code": "en-US",
-                "name": "en-US-Wavenet-D",
-                "ssml_gender": texttospeech.SsmlVoiceGender.MALE
-            }
-        }
-    
+    """Text-to-Speech service using Microsoft Edge neural voices."""
+
+    # Voice configurations (edge-tts names).
+    # Urdu: native Pakistani voices exist (ur-PK). Previously we used the
+    # female ur-IN-Wavenet-A, so Uzma (female, PK) stays closest to old behavior.
+    voices: Dict[str, dict] = {
+        "ur-IN": {"name": "ur-PK-UzmaNeural", "gender": "Female"},
+        "ur-PK": {"name": "ur-PK-UzmaNeural", "gender": "Female"},
+        "ur": {"name": "ur-PK-UzmaNeural", "gender": "Female"},
+        "en-US": {"name": "en-US-AndrewNeural", "gender": "Male"},
+        "en": {"name": "en-US-AndrewNeural", "gender": "Male"},
+    }
+
+    def _resolve_voice(self, language: str) -> str:
+        cfg = self.voices.get(language) or self.voices.get("ur-PK")
+        return cfg["name"]
+
     async def synthesize_speech(
         self,
         text: str,
         language: str = "ur-PK",
-        speaking_rate: float = 1.0
+        speaking_rate: float = 1.0,
     ) -> bytes:
-        """
-        Convert text to speech audio.
-        
+        """Convert text to speech audio.
+
         Args:
             text: Text to synthesize
             language: Language code (ur-PK or en-US)
             speaking_rate: Speed (0.5-2.0, default 1.0)
-            
+
         Returns:
-            Audio bytes (LINEAR16, 16kHz, mono)
+            Audio bytes (mp3)
         """
         try:
-            # Get voice configuration
-            voice_config = self.voices.get(language, self.voices["ur-PK"])
-            
-            # Set up synthesis input
-            synthesis_input = texttospeech.SynthesisInput(text=text)
-            
-            # Configure voice
-            voice = texttospeech.VoiceSelectionParams(
-                language_code=voice_config["language_code"],
-                name=voice_config["name"],
-                ssml_gender=voice_config["ssml_gender"]
-            )
-            
-            # Configure audio
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding.MP3,
-                speaking_rate=speaking_rate,
-                pitch=0.0,
-                volume_gain_db=0.0
-            )
+            voice = self._resolve_voice(language)
 
-            
-            # Perform synthesis (run in thread pool since it's a blocking call)
-            import asyncio
-            response = await asyncio.to_thread(
-                self.client.synthesize_speech,
-                input=synthesis_input,
-                voice=voice,
-                audio_config=audio_config
-            )
-            
+            # edge-tts rate format: percentage string like "+10%" / "-5%"
+            pct = round((speaking_rate - 1.0) * 100)
+            rate_str = f"{pct:+d}%"
+
+            communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate_str)
+
+            chunks: list[bytes] = []
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    chunks.append(chunk["data"])
+
+            audio = b"".join(chunks)
+            if not audio:
+                raise RuntimeError(f"edge-tts returned no audio for voice={voice}")
+
             logger.info(
                 f"Synthesized speech: {len(text)} chars",
                 f"آواز بنائی: {len(text)} حروف",
                 language=language,
-                audio_size=len(response.audio_content)
+                voice=voice,
+                audio_size=len(audio),
             )
-            
-            return response.audio_content
-            
+            return audio
+
         except Exception as e:
             logger.error(
                 f"TTS synthesis error: {str(e)}",
                 f"TTS خرابی: {str(e)}",
-                text=text[:50]
+                text=text[:50],
             )
             raise
-    
+
     async def synthesize_to_base64(
         self,
         text: str,
-        language: str = "ur-PK"
+        language: str = "ur-PK",
     ) -> str:
-        """
-        Synthesize speech and encode to base64 for WebSocket.
-        
-        Args:
-            text: Text to synthesize
-            language: Language code
-            
-        Returns:
-            Base64 encoded audio
-        """
+        """Synthesize speech and encode to base64 for WebSocket."""
         audio_bytes = await self.synthesize_speech(text, language)
-        return base64.b64encode(audio_bytes).decode('utf-8')
+        return base64.b64encode(audio_bytes).decode("utf-8")
 
 
 # Global TTS service instance

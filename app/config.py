@@ -8,12 +8,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
     
-    # GCP Configuration
-    GCP_PROJECT_ID: str
-    GCP_CREDENTIALS_PATH: Optional[str] = None
-    
-    # Gemini API (optional - use Vertex AI by default)
+    # AI provider configuration
+    # Preferred: Gemini API (AI Studio) key — free tier, no billing.
+    # Vertex AI (ADC + GCP_PROJECT_ID) remains as fallback.
     GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
+    # Local STT (faster-whisper)
+    STT_MODEL_SIZE: str = "small"
+    STT_COMPUTE_TYPE: str = "int8"
+
+    # GCP Configuration (only needed for Vertex AI / legacy GCS mode)
+    GCP_PROJECT_ID: Optional[str] = ""
+    GCP_CREDENTIALS_PATH: Optional[str] = None
     
     # Service Configuration
     SESSION_TIMEOUT_MINUTES: int = 60
@@ -27,8 +34,8 @@ class Settings(BaseSettings):
     EXPRESS_WEBHOOK_URL: Optional[str] = None
     EXPRESS_WEBHOOK_SECRET: Optional[str] = None
     
-    # Cloud Storage
-    AUDIO_STORAGE_BUCKET: Optional[str] = None
+    # Audio Storage (local directory; replaces Cloud Storage bucket)
+    AUDIO_DIR: str = "./data/audio"
     
     # Logging
     LOG_LEVEL: str = "INFO"
@@ -41,7 +48,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        extra="ignore",
     )
     
     @property
@@ -55,11 +63,9 @@ class Settings(BaseSettings):
         return self.ENVIRONMENT.lower() == "production"
     
     @property
-    def storage_bucket_name(self) -> str:
-        """Get or generate storage bucket name."""
-        if self.AUDIO_STORAGE_BUCKET:
-            return self.AUDIO_STORAGE_BUCKET
-        return f"interview-audio-{self.GCP_PROJECT_ID}"
+    def audio_dir(self) -> str:
+        """Local directory where interview audio is stored."""
+        return self.AUDIO_DIR
 
 
 # Global settings instance

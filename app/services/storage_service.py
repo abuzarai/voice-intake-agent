@@ -1,10 +1,17 @@
-"""Google Cloud Storage service for audio file management."""
+"""Local filesystem storage service for interview audio.
+
+Replaces Google Cloud Storage. Public surface preserved:
+    await storage_service.upload_audio(session_id, audio_bytes) -> Optional[str]
+
+Audio is written under settings.audio_dir with a simple time-based cleanup
+replacing the old GCS lifecycle rule.
+"""
 
 import asyncio
-from datetime import timedelta
+import os
+import time
 from typing import Optional
-from google.cloud import storage
-from google.api_core import exceptions as gcp_exceptions
+
 from app.config import settings
 from app.utils import get_logger
 
@@ -12,120 +19,98 @@ logger = get_logger(__name__)
 
 
 class StorageService:
-    """Google Cloud Storage service for audio files."""
-    
+    """Local filesystem storage for interview audio files."""
+
     def __init__(self):
-        """Initialize GCS client."""
+        self.base_dir = settings.audio_dir
+        self._ensure_dir_exists()
+
+    def _ensure_dir_exists(self):
         try:
-            self.client = storage.Client(project=settings.GCP_PROJECT_ID)
-            self.bucket_name = settings.storage_bucket_name
-            self._ensure_bucket_exists()
-        except Exception as e:
-            logger.error(
-                f"Failed to initialize GCS client: {str(e)}",
-                f"GCS کلائنٹ شروع کرنے میں ناکامی: {str(e)}"
+            os.makedirs(os.path.join(self.base_dir, "interviews"), exist_ok=True)
+            logger.info(
+                f"Audio storage ready at {self.base_dir}",
+                f"آڈیو اسٹوریج تیار ہے: {self.base_dir}",
+                directory=self.base_dir,
             )
-            self.client = None
-    
-    def _ensure_bucket_exists(self):
-        """Create bucket if it doesn't exist and set lifecycle policy."""
-        if not self.client:
-            return
-        
-        try:
-            bucket = self.client.bucket(self.bucket_name)
-            
-            if not bucket.exists():
-                # Create bucket
-                bucket = self.client.create_bucket(
-                    self.bucket_name,
-                    location="US"  # Change to your preferred region
-                )
-                logger.info(
-                    f"Created GCS bucket: {self.bucket_name}",
-                    f"GCS بکٹ بنایا گیا: {self.bucket_name}"
-                )
-                
-                # Set lifecycle policy for auto-deletion
-                bucket.add_lifecycle_delete_rule(
-                    age=settings.AUDIO_RETENTION_DAYS
-                )
-                bucket.patch()
-                
-                logger.info(
-                    f"Set {settings.AUDIO_RETENTION_DAYS}-day retention policy",
-                    f"{settings.AUDIO_RETENTION_DAYS} دن کی retention پالیسی سیٹ کی"
-                )
-        
-        except gcp_exceptions.GoogleAPIError as e:
+        except OSError as e:
             logger.error(
-                f"Error creating/configuring bucket: {str(e)}",
-                f"بکٹ بنانے میں خرابی: {str(e)}"
+                f"Failed to create audio directory: {str(e)}",
+                f"آڈیو ڈائریکٹری بنانے میں ناکامی: {str(e)}",
             )
-    
+
     async def upload_audio(self, session_id: str, audio_bytes: bytes) -> Optional[str]:
-        """Upload audio file to Cloud Storage.
-        
+        """Store interview audio on local disk.
+
         Args:
             session_id: Session identifier
             audio_bytes: Complete audio as bytes
-            
+
         Returns:
-            Public URL of uploaded file or None on error
+            Path of the stored file, or None on error.
         """
-        if not self.client:
-            logger.error(
-                "GCS client not initialized",
-                "GCS کلائنٹ شروع نہیں ہوا"
-            )
-            return None
-        
         try:
-            bucket = self.client.bucket(self.bucket_name)
-            blob_name = f"interviews/{session_id}.wav"
-            blob = bucket.blob(blob_name)
-            
-            # Upload with metadata
-            blob.metadata = {
-                "session_id": session_id,
-                "content_type": "audio/wav"
-            }
-            
-            await asyncio.to_thread(
-                blob.upload_from_string,
-                audio_bytes,
-                content_type="audio/wav"
-            )
-            
+            target_dir = os.path.join(self.base_dir, "interviews")
+            os.makedirs(target_dir, exist_ok=True)
+
+            file_path = os.path.join(target_dir, f"{session_id}.wav")
+
+            def _write():
+                with open(file_path, "wb") as f:
+                    f.write(audio_bytes)
+
+            await asyncio.to_thread(_write)
+
             logger.info(
-                f"Uploaded audio for session {session_id}",
-                f"سیشن {session_id} کی آڈیو اپلوڈ کی گئی",
+                f"Stored audio for session {session_id}",
+                f"سیشن {session_id} کی آڈیو محفوظ کی گئی",
                 session_id=session_id,
-                size_bytes=len(audio_bytes)
+                size_bytes=len(audio_bytes),
+                path=file_path,
             )
-            
-            # Generate signed URL (valid for 7 days)
-            url = blob.generate_signed_url(
-                expiration=timedelta(days=settings.AUDIO_RETENTION_DAYS),
-                method="GET"
-            )
-            
-            return url
-            
-        except gcp_exceptions.GoogleAPIError as e:
+            return file_path
+
+        except OSError as e:
             logger.error(
-                f"GCS upload error: {str(e)}",
-                f"GCS اپلوڈ میں خرابی: {str(e)}",
-                session_id=session_id
+                f"Audio storage error: {str(e)}",
+                f"آڈیو محفوظ کرنے میں خرابی: {str(e)}",
+                session_id=session_id,
             )
             return None
         except Exception as e:
             logger.error(
                 f"Audio upload error: {str(e)}",
                 f"آڈیو اپلوڈ میں خرابی: {str(e)}",
-                session_id=session_id
+                session_id=session_id,
             )
             return None
+
+    def cleanup_older_than(self, days: int = None) -> int:
+        """Delete stored audio older than `days` (default: AUDIO_RETENTION_DAYS).
+
+        Replaces the GCS bucket lifecycle rule. Call from cron/housekeeping.
+        Returns the number of files removed.
+        """
+        days = days if days is not None else settings.AUDIO_RETENTION_DAYS
+        cutoff = time.time() - days * 86400
+        removed = 0
+
+        for root, _dirs, files in os.walk(self.base_dir):
+            for name in files:
+                path = os.path.join(root, name)
+                try:
+                    if os.path.getmtime(path) < cutoff:
+                        os.remove(path)
+                        removed += 1
+                except OSError:
+                    continue
+
+        if removed:
+            logger.info(
+                f"Cleaned {removed} audio files older than {days} days",
+                f"{days} دن سے پرانی {removed} آڈیو فائلیں ہٹا دیں",
+            )
+        return removed
 
 
 # Global storage service instance

@@ -3,12 +3,13 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 websockets>=12.0
 
-# Google Cloud Services
-google-cloud-speech>=2.24.0
-google-cloud-translate>=3.14.0
-google-cloud-storage>=2.14.0
-google-cloud-texttospeech>=2.16.3
+# AI services
+# Gemini API (google-genai covers both API-key and Vertex modes)
 google-genai>=1.0.0
+# Local STT (faster-whisper, CPU via CTranslate2)
+faster-whisper>=1.0.0
+# TTS (Microsoft Edge neural voices, free)
+edge-tts>=7.0.0
 
 # Pydantic for data validation
 pydantic>=2.10.0

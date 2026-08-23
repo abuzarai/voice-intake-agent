@@ -61,18 +61,34 @@ class GeminiService:
     """Gemini Flash service for legal classification."""
 
     def __init__(self):
-        """Initialize Gemini client using Vertex AI."""
+        """Initialize Gemini client.
+
+        Preferred: Gemini API key (AI Studio) — no project or billing needed.
+        Fallback: Vertex AI via ADC + GCP_PROJECT_ID.
+        """
         try:
-            # Initialize with Vertex AI
-            # Authentication via GOOGLE_APPLICATION_CREDENTIALS env var
-            self.client = genai.Client(
-                vertexai=True, project=settings.GCP_PROJECT_ID, location="us-central1"
-            )
-            self.model = "gemini-2.5-flash"  # Model name for Vertex AI
-            logger.info(
-                "Gemini client initialized with Vertex AI",
-                "Gemini کلائنٹ Vertex AI کے ساتھ شروع ہوا",
-            )
+            if settings.GEMINI_API_KEY:
+                self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+                self.model = settings.GEMINI_MODEL
+                logger.info(
+                    "Gemini client initialized with API key",
+                    "Gemini کلائنٹ API کیز کے ساتھ شروع ہوا",
+                )
+            elif settings.GCP_PROJECT_ID:
+                self.client = genai.Client(
+                    vertexai=True,
+                    project=settings.GCP_PROJECT_ID,
+                    location="us-central1",
+                )
+                self.model = settings.GEMINI_MODEL
+                logger.info(
+                    "Gemini client initialized with Vertex AI",
+                    "Gemini کلائنٹ Vertex AI کے ساتھ شروع ہوا",
+                )
+            else:
+                raise RuntimeError(
+                    "Missing Gemini credentials: set GEMINI_API_KEY (or GCP_PROJECT_ID for Vertex AI)"
+                )
         except Exception as e:
             logger.error(
                 f"Failed to initialize Gemini client: {str(e)}",
