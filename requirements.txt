@@ -3,11 +3,9 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 websockets>=12.0
 
-# AI services
-# Gemini API (google-genai covers both API-key and Vertex modes)
+# Gemini API (google-genai covers both API-key and Vertex modes);
+# audio STT + TTS use Gemini API + edge-tts (free, no GCP project needed)
 google-genai>=1.0.0
-# Local STT (faster-whisper, CPU via CTranslate2)
-faster-whisper>=1.0.0
 # TTS (Microsoft Edge neural voices, free)
 edge-tts>=7.0.0
 

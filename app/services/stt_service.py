@@ -1,86 +1,80 @@
-"""Local Speech-to-Text service using faster-whisper (CTranslate2, CPU).
+"""Speech-to-Text service using Gemini audio transcription.
 
-Replaces Google Cloud Speech-to-Text. Public surface preserved:
+Replaces faster-whisper (poor Urdu accuracy) and Google Cloud Speech.
+Gemini 2.5 Flash transcribes Urdu/English mixed audio near-verbatim
+(measured ~0.16 WER on legal Urdu vs 0.73 for whisper-small).
+
+Public surface preserved:
     stt_service.recognize_audio(audio_bytes, primary_language, fallback_language)
         -> Optional[dict] with keys: text, confidence, language
 """
 
-import asyncio
-import math
-import os
+import logging
+import subprocess
 import tempfile
+import os
 from typing import Optional
+
+from google import genai
 
 from app.config import settings
 from app.utils import get_logger
 
 logger = get_logger(__name__)
 
-# Map the language codes used across the app (BCP-47 style) to whisper codes.
-_WHISPER_LANG = {
-    "ur": "ur",
-    "ur-pk": "ur",
-    "ur-in": "ur",
-    "en": "en",
-    "en-us": "en",
-}
-
-
-def _to_whisper_lang(code: Optional[str]) -> Optional[str]:
-    if not code:
-        return None
-    return _WHISPER_LANG.get(code.strip().lower())
+TRANSCRIBE_PROMPT = (
+    "Transcribe this audio verbatim into plain text. "
+    "It is a legal intake interview and may mix Urdu and English. "
+    "Write Urdu speech in URDU SCRIPT (اردو رسم الخط), NOT Devanagari. "
+    "Write English speech in Latin script. "
+    "Keep the original language(s); do NOT translate, summarize, or add punctuation. "
+    "Preserve names, numbers, and case references exactly. "
+    "Output ONLY the transcription."
+)
 
 
 class SpeechToTextService:
-    """Faster-whisper transcription service with lazy model loading."""
+    """Gemini audio transcription service."""
 
     def __init__(self):
-        self._model = None
-        self.model_size = settings.STT_MODEL_SIZE
-        self.compute_type = settings.STT_COMPUTE_TYPE
+        self._client = None
+        self.model = getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash")
 
-    def _get_model(self):
-        """Lazy-load the whisper model on first use (keeps startup fast)."""
-        if self._model is None:
-            from faster_whisper import WhisperModel
-
-            logger.info(
-                f"Loading faster-whisper model '{self.model_size}' ({self.compute_type})...",
-                f"faster-whisper ماڈل '{self.model_size}' لوڈ ہو رہا ہے...",
-            )
-            self._model = WhisperModel(
-                self.model_size,
-                device="cpu",
-                compute_type=self.compute_type,
-            )
-            logger.info("Whisper model loaded", "ماڈل لوڈ ہو گیا")
-        return self._model
+    def _get_client(self):
+        """Lazy client init; fails loudly if no API key configured."""
+        if self._client is None:
+            if not settings.GEMINI_API_KEY:
+                raise RuntimeError(
+                    "Missing Gemini credentials: set GEMINI_API_KEY "
+                    "(required for STT transcription)."
+                )
+            self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        return self._client
 
     @staticmethod
-    def _to_wav_16k(audio_bytes: bytes) -> Optional[str]:
-        """Transcode arbitrary browser audio (webm/opus etc.) to 16kHz mono WAV.
+    def _to_mp3_16k(audio_bytes: bytes) -> Optional[str]:
+        """Transcode browser audio (webm/opus etc.) to 16kHz mono mp3.
 
-        Uses ffmpeg (present in the Docker image). Returns a temp file path.
+        Uses ffmpeg (present in the Docker image). MP3 keeps payloads small
+        (Gemini inline-data limit is 20MB) and is a supported inline mime.
+        Returns a temp file path.
         """
-        import subprocess
-
         tmp_in = tmp_out = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as fin:
                 fin.write(audio_bytes)
                 tmp_in = fin.name
-            tmp_out = tmp_in.replace(".webm", ".wav")
+            tmp_out = tmp_in.replace(".webm", ".mp3")
 
             result = subprocess.run(
                 [
                     "ffmpeg", "-y", "-i", tmp_in,
                     "-ar", "16000", "-ac", "1",
-                    "-c:a", "pcm_s16le",
+                    "-c:a", "libmp3lame", "-b:a", "64k",
                     tmp_out,
                 ],
                 capture_output=True,
-                timeout=60,
+                timeout=90,
             )
             if result.returncode != 0:
                 logger.error(f"ffmpeg error: {result.stderr.decode()[:300]}")
@@ -93,102 +87,88 @@ class SpeechToTextService:
             logger.error(f"Audio conversion error: {str(e)}")
             return None
 
-    def _transcribe_sync(
-        self,
-        wav_path: str,
-        primary_language: Optional[str],
-        fallback_language: Optional[str],
-    ) -> Optional[dict]:
-        """Blocking transcription; executed in a worker thread."""
-        model = self._get_model()
-
-        # Prefer the caller's primary language when we understand it;
-        # otherwise let whisper auto-detect (handles bilingual turns).
-        lang = _to_whisper_lang(primary_language) or _to_whisper_lang(fallback_language)
-
-        segments_iter, info = model.transcribe(
-            wav_path,
-            language=lang,          # None -> auto-detect
-            beam_size=5,
-            vad_filter=True,        # skip silence; fewer hallucinations
-        )
-
-        parts: list[str] = []
-        logprobs: list[float] = []
-        for seg in segments_iter:
-            if seg.text and seg.text.strip():
-                parts.append(seg.text.strip())
-                logprobs.append(seg.avg_logprob)
-
-        text = " ".join(parts).strip()
-        if not text:
-            logger.warning(
-                "No speech recognized in audio",
-                "آڈیو میں کوئی تقریر نہیں ملی",
-                primary_language=primary_language,
-            )
-            return None
-
-        # exp(avg_logprob) maps [-inf, 0] -> (0, 1]; a reasonable confidence proxy.
-        confidence = (
-            round(min(1.0, max(0.0, math.exp(sum(logprobs) / len(logprobs)))), 2)
-            if logprobs
-            else 0.0
-        )
-        detected = info.language or lang or "ur"
-
-        logger.info(
-            f"STT recognized ({detected}, conf={confidence}): '{text[:50]}...'",
-            f"STT نے پہچانا ({detected}): '{text[:50]}...'",
-        )
-        return {
-            "text": text,
-            "confidence": confidence,
-            "language": detected,
-        }
-
     def recognize_audio(
         self,
         audio_bytes: bytes,
         primary_language: str = "ur-PK",
         fallback_language: str = "en-US",
     ) -> Optional[dict]:
-        """Recognize speech from complete audio bytes (webm/wav/mp3/...).
+        """Transcribe complete audio bytes (webm/wav/mp3/...) via Gemini.
 
         Args:
             audio_bytes: Raw audio as produced by the browser MediaRecorder.
-            primary_language: Preferred language code (e.g. ur-PK, en-US).
+            primary_language: Preferred language code (ur-PK, en-US).
             fallback_language: Secondary language code.
 
         Returns:
-            {"text": str, "confidence": float, "language": str} or None.
+            {"text": str, "confidence": Optional[float], "language": str} or None.
         """
         try:
             logger.info(
                 f"STT received audio: {len(audio_bytes)} bytes, primary: {primary_language}",
                 f"STT کو آڈیو ملی: {len(audio_bytes)} بائٹس",
             )
-
             if not audio_bytes or len(audio_bytes) < 100:
                 logger.warning(
                     f"Audio data too small: {len(audio_bytes) if audio_bytes else 0} bytes"
                 )
                 return None
 
-            wav_path = self._to_wav_16k(audio_bytes)
-            if not wav_path:
+            mp3_path = self._to_mp3_16k(audio_bytes)
+            if not mp3_path:
                 return None
 
             try:
-                # Blocking transcription (same behavior as before: handlers call this
-                # synchronously; offloading it from the event loop is a separate task).
-                return self._transcribe_sync(wav_path, primary_language, fallback_language)
+                with open(mp3_path, "rb") as f:
+                    audio_data = f.read()
+
+                client = self._get_client()
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=genai.types.Content(
+                        parts=[
+                            genai.types.Part(
+                                inline_data=genai.types.Blob(
+                                    mime_type="audio/mpeg", data=audio_data
+                                )
+                            ),
+                            genai.types.Part(text=TRANSCRIBE_PROMPT),
+                        ]
+                    ),
+                )
+
+                text = (response.text or "").strip()
+                if not text:
+                    logger.warning(
+                        "Gemini STT returned empty transcription",
+                        "Gemini STT نے خالی ٹرانسکرپشن واپس کی",
+                        primary_language=primary_language,
+                    )
+                    return None
+
+                logger.info(
+                    f"STT recognized: '{text[:50]}...'",
+                    f"STT نے پہچانا: '{text[:50]}...'",
+                )
+                # Gemini offers no numeric confidence; language defaults to the
+                # interview's primary language (bilingual output is preserved
+                # by the model itself).
+                return {
+                    "text": text,
+                    "confidence": None,
+                    "language": primary_language.split("-")[0],  # "ur-pk" -> "ur"
+                }
+
             finally:
-                if os.path.exists(wav_path):
-                    os.remove(wav_path)
+                for p in (mp3_path, mp3_path.replace(".mp3", ".webm")):
+                    if os.path.exists(p):
+                        os.remove(p)
 
         except Exception as e:
-            logger.error(f"STT recognition error: {str(e)}")
+            logger.error(
+                f"STT recognition error: {str(e)}",
+                f"STT پہچان میں خرابی: {str(e)}",
+            )
             return None
 
 

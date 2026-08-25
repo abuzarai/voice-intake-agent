@@ -8,15 +8,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
     
-    # AI provider configuration
-    # Preferred: Gemini API (AI Studio) key — free tier, no billing.
-    # Vertex AI (ADC + GCP_PROJECT_ID) remains as fallback.
+    # Gemini model (LLM + audio transcription)
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.5-flash"
-
-    # Local STT (faster-whisper)
-    STT_MODEL_SIZE: str = "small"
-    STT_COMPUTE_TYPE: str = "int8"
 
     # GCP Configuration (only needed for Vertex AI / legacy GCS mode)
     GCP_PROJECT_ID: Optional[str] = ""
