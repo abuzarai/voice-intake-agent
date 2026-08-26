@@ -1,6 +1,9 @@
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
+# Install uv (standalone binary; pin for reproducibility)
+COPY --from=ghcr.io/astral-sh/uv:0.5.14 /uv /uvx /bin/
+
 # Set working directory
 WORKDIR /app
 
@@ -10,11 +13,11 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy dependency files first for better caching
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies from locked graph
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy application code
 COPY app/ ./app/
@@ -23,6 +26,9 @@ COPY test_ui.html ./test_ui.html
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
+
+# Prefer the project venv (uv sync created .venv)
+ENV PATH="/app/.venv/bin:${PATH}"
 
 # Expose port (Cloud Run will set PORT env var)
 EXPOSE 8000
