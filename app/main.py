@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import asyncio
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -9,6 +10,9 @@ from app.utils import get_logger
 from app.utils.logger import configure_logging
 from app.middleware.request_logging import request_logging_middleware
 from app.middleware.rate_limit import rate_limit_sessions
+from app.services.session_service import session_manager
+from app.services.storage_service import storage_service
+from app.api.websocket_conversational import drain_webhook_tasks
 
 configure_logging()
 logger = get_logger(__name__)
@@ -41,20 +45,50 @@ from app.api import websocket_conversational
 app.include_router(websocket_conversational.router)
 
 
+_housekeeping_task = None
+
+
+async def _housekeeping_loop():
+    while True:
+        try:
+            session_manager.cleanup_expired_sessions()
+            storage_service.cleanup_older_than()
+        except Exception as e:
+            logger.error(f"Housekeeping error: {e}")
+        await asyncio.sleep(15 * 60)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
+    global _housekeeping_task
     logger.info(
         "Voice Interview Agent starting...",
         "Voice Interview Agent شروع ہو رہا ہے...",
         environment=settings.ENVIRONMENT,
         gcp_project=settings.GCP_PROJECT_ID
     )
+    # Housekeeping: expired in-memory sessions and stale audio were never
+    # cleaned (accumulation + memory pinning).
+    _housekeeping_task = asyncio.create_task(_housekeeping_loop())
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
+    global _housekeeping_task
+    if _housekeeping_task:
+        _housekeeping_task.cancel()
+        try:
+            await _housekeeping_task
+        except (asyncio.CancelledError, Exception):
+            pass
+    # Drain in-flight webhook deliveries so completed interviews are not lost
+    # when the container restarts.
+    try:
+        await drain_webhook_tasks(timeout=15.0)
+    except Exception as e:
+        logger.error(f"Webhook drain error: {e}")
     logger.info(
         "Voice Interview Agent shutting down...",
         "Voice Interview Agent بند ہو رہا ہے..."

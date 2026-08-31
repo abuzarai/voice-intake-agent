@@ -19,6 +19,7 @@ from google import genai
 
 from app.config import settings
 from app.utils import get_logger
+from app.utils.retry import gemini_call_with_retry
 
 logger = get_logger(__name__)
 
@@ -60,6 +61,7 @@ class SpeechToTextService:
         Returns a temp file path.
         """
         tmp_in = tmp_out = None
+        ok = False
         try:
             with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as fin:
                 fin.write(audio_bytes)
@@ -79,6 +81,7 @@ class SpeechToTextService:
             if result.returncode != 0:
                 logger.error(f"ffmpeg error: {result.stderr.decode()[:300]}")
                 return None
+            ok = True
             return tmp_out
         except FileNotFoundError:
             logger.error("ffmpeg not found. Please install ffmpeg.")
@@ -86,6 +89,16 @@ class SpeechToTextService:
         except Exception as e:
             logger.error(f"Audio conversion error: {str(e)}")
             return None
+        finally:
+            # Never leak temp files on failure: the caller only sees a path
+            # when conversion succeeded (and cleans it up itself).
+            if not ok:
+                for p in (tmp_in, tmp_out):
+                    if p:
+                        try:
+                            os.remove(p)
+                        except OSError:
+                            pass
 
     def recognize_audio(
         self,
@@ -123,18 +136,24 @@ class SpeechToTextService:
                     audio_data = f.read()
 
                 client = self._get_client()
-                response = client.models.generate_content(
-                    model=self.model,
-                    contents=genai.types.Content(
-                        parts=[
-                            genai.types.Part(
-                                inline_data=genai.types.Blob(
-                                    mime_type="audio/mpeg", data=audio_data
-                                )
-                            ),
-                            genai.types.Part(text=TRANSCRIBE_PROMPT),
-                        ]
-                    ),
+                # Language guidance in the transcription prompt (params were
+                # previously gathered but never used).
+                prompt = f"{TRANSCRIBE_PROMPT}\nAudio language: {primary_language}; fallback: {fallback_language}."
+                # Bounded retry on 429/5xx (daily caps still surface as errors).
+                response = gemini_call_with_retry(
+                    lambda: client.models.generate_content(
+                        model=self.model,
+                        contents=genai.types.Content(
+                            parts=[
+                                genai.types.Part(
+                                    inline_data=genai.types.Blob(
+                                        mime_type="audio/mpeg", data=audio_data
+                                    )
+                                ),
+                                genai.types.Part(text=prompt),
+                            ]
+                        ),
+                    )
                 )
 
                 text = (response.text or "").strip()

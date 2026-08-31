@@ -9,6 +9,7 @@ from google import genai
 from app.config import settings
 from app.models import LegalAnalysis, Language, LegalDomain, Urgency, KeyEntities
 from app.utils import get_logger
+from app.utils.retry import agemini_call_with_retry
 
 logger = get_logger(__name__)
 
@@ -66,36 +67,30 @@ class GeminiService:
         Preferred: Gemini API key (AI Studio) — no project or billing needed.
         Fallback: Vertex AI via ADC + GCP_PROJECT_ID.
         """
-        try:
-            if settings.GEMINI_API_KEY:
-                self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-                self.model = settings.GEMINI_MODEL
-                logger.info(
-                    "Gemini client initialized with API key",
-                    "Gemini کلائنٹ API کیز کے ساتھ شروع ہوا",
-                )
-            elif settings.GCP_PROJECT_ID:
-                self.client = genai.Client(
-                    vertexai=True,
-                    project=settings.GCP_PROJECT_ID,
-                    location="us-central1",
-                )
-                self.model = settings.GEMINI_MODEL
-                logger.info(
-                    "Gemini client initialized with Vertex AI",
-                    "Gemini کلائنٹ Vertex AI کے ساتھ شروع ہوا",
-                )
-            else:
-                raise RuntimeError(
-                    "Missing Gemini credentials: set GEMINI_API_KEY (or GCP_PROJECT_ID for Vertex AI)"
-                )
-        except Exception as e:
-            logger.error(
-                f"Failed to initialize Gemini client: {str(e)}",
-                f"Gemini کلائنٹ شروع کرنے میں ناکامی: {str(e)}",
+        if settings.GEMINI_API_KEY:
+            self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            self.model = settings.GEMINI_MODEL
+            logger.info(
+                "Gemini client initialized with API key",
+                "Gemini کلائنٹ API کیز کے ساتھ شروع ہوا",
             )
-            self.client = None
-            self.model = None
+        elif settings.GCP_PROJECT_ID:
+            self.client = genai.Client(
+                vertexai=True,
+                project=settings.GCP_PROJECT_ID,
+                location="us-central1",
+            )
+            self.model = settings.GEMINI_MODEL
+            logger.info(
+                "Gemini client initialized with Vertex AI",
+                "Gemini کلائنٹ Vertex AI کے ساتھ شروع ہوا",
+            )
+        else:
+            # Fail fast: a silently-degraded voice pipeline (client=None)
+            # burned interviews without anyone noticing.
+            raise RuntimeError(
+                "Missing Gemini credentials: set GEMINI_API_KEY (or GCP_PROJECT_ID for Vertex AI)"
+            )
 
     async def analyze_transcript(
         self, transcript: str, session_id: str, preferred_language: Optional[str] = None
@@ -143,13 +138,15 @@ class GeminiService:
             )
 
             # Generate response using Vertex AI
-            response = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model=self.model,
-                contents=prompt,
-                config=genai.types.GenerateContentConfig(
-                    temperature=0.2  # Low temperature for more consistent output
-                ),
+            response = await agemini_call_with_retry(
+                lambda: asyncio.to_thread(
+                    self.client.models.generate_content,
+                    model=self.model,
+                    contents=prompt,
+                    config=genai.types.GenerateContentConfig(
+                        temperature=0.2  # Low temperature for more consistent output
+                    ),
+                )
             )
 
             # Parse JSON response (extract from markdown if needed)
@@ -244,11 +241,13 @@ class GeminiService:
             }
 
         try:
-            response = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model=self.model,
-                contents=prompt,
-                config=genai.types.GenerateContentConfig(temperature=0.3),
+            response = await agemini_call_with_retry(
+                lambda: asyncio.to_thread(
+                    self.client.models.generate_content,
+                    model=self.model,
+                    contents=prompt,
+                    config=genai.types.GenerateContentConfig(temperature=0.3),
+                )
             )
 
             # Log raw response for debugging

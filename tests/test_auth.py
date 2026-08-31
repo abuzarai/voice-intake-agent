@@ -3,6 +3,7 @@
 import os
 
 os.environ["ENVIRONMENT"] = "production"
+os.environ["GEMINI_API_KEY"] = "test-api-key"  # fail-fast init requires it
 
 from fastapi.testclient import TestClient  # noqa: E402
 

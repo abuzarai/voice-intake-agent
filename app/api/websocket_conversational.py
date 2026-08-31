@@ -150,6 +150,25 @@ class ConversationalConnectionManager:
 manager = ConversationalConnectionManager()
 turn_audio_buffers: dict[str, list[bytes]] = {}
 
+# Long-lived webhook deliveries are tracked so shutdown can drain them — a
+# fire-and-forget task is cancelled on process stop and the completed
+# interview is silently lost.
+_pending_webhook_tasks: set[asyncio.Task] = set()
+
+
+def _spawn_webhook_send(payload) -> asyncio.Task:
+    task = asyncio.create_task(webhook_service.send_results(payload))
+    _pending_webhook_tasks.add(task)
+    task.add_done_callback(_pending_webhook_tasks.discard)
+    return task
+
+
+async def drain_webhook_tasks(timeout: float = 15.0) -> None:
+    """Await in-flight webhook deliveries (called at app shutdown)."""
+    tasks = list(_pending_webhook_tasks)
+    if tasks:
+        await asyncio.wait(tasks, timeout=timeout)
+
 
 @router.websocket("/ws/{session_id}")
 async def conversational_websocket_endpoint(websocket: WebSocket, session_id: str):
@@ -768,7 +787,7 @@ async def handle_interview_end(session_id: str):
                 metadata=session.get("metadata", {}),
             )
 
-            asyncio.create_task(webhook_service.send_results(webhook_payload))
+            _spawn_webhook_send(webhook_payload)
 
         logger.info(
             "Conversational interview completed",
