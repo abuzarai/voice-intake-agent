@@ -21,7 +21,6 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy application code
 COPY app/ ./app/
-COPY test_ui.html ./test_ui.html
 
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

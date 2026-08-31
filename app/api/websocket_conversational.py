@@ -18,6 +18,7 @@ from app.models import (
 from app.services.session_service import session_manager
 from app.services.stt_service import stt_service
 from app.services.gemini_service import gemini_service
+from app.middleware.rate_limit import ws_limiter
 from app.services.storage_service import storage_service
 from app.services.webhook_service import webhook_service
 from app.services.tts_service import tts_service
@@ -162,6 +163,13 @@ async def conversational_websocket_endpoint(websocket: WebSocket, session_id: st
     4. Repeat until interview complete
     5. Agent provides summary and results
     """
+    # Rate-limit handshakes per source before doing any work.
+    if not ws_limiter.allow(websocket.client.host if websocket.client else "unknown"):
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Rate limit exceeded"
+        )
+        return
+
     # Verify session exists
     session = session_manager.get_session(session_id)
     if not session:
