@@ -197,17 +197,6 @@ SERVER: returns results, sends webhook
 
 ### WebSocket Protocol (Listen-Only — Legacy)
 
-**Endpoint:** `GET /api/v1/listen-only/ws/{session_id}`
-
-Simpler flow: client records the entire response, sends all audio, then signals end.
-
-```
-CLIENT: send full audio as chunks → send end_interview
-SERVER: transcribes entire audio → Gemini analysis → return results
-```
-
-</details>
-
 ---
 
 ## 🤖 Core Services
@@ -388,7 +377,6 @@ voice-intake-agent/
 │   ├── config.py                     # Pydantic settings (all env vars)
 │   ├── api/
 │   │   ├── rest.py                   # POST/GET sessions, health
-│   │   ├── websocket.py              # Legacy listen-only WebSocket
 │   │   └── websocket_conversational.py  # Main conversational WebSocket
 │   ├── middleware/
 │   │   └── request_logging.py        # Request/response logging
@@ -411,7 +399,6 @@ voice-intake-agent/
 ├── tests/
 │   ├── test_rest_sessions_generated.py  # FastAPI TestClient tests
 │   ├── test_comprehensive.py         # Full suite (REST, services, models, WS)
-│   ├── test_gcp.py                   # GCP service connectivity tests
 │   ├── test_quick.py                 # Smoke tests
 │   ├── test_api.py                   # Manual HTTP tests
 │   └── test_websocket.py             # Async WebSocket test
@@ -419,7 +406,6 @@ voice-intake-agent/
 │   ├── gcp-setup.md                  # Full GCP project setup guide
 │   └── integration-guide.md          # Express + React integration reference
 ├── scripts/
-│   └── stt_from_webm.py              # CLI STT test utility
 ├── test_ui.html                      # Interactive browser test UI
 ├── Dockerfile                        # Cloud Run build
 └── requirements.txt                  # Python dependencies

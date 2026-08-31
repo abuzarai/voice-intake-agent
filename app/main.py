@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import settings
-from app.api import rest, websocket
+from app.api import rest
 from app.utils import get_logger
 from app.utils.logger import configure_logging
 from app.middleware.request_logging import request_logging_middleware
@@ -37,8 +37,6 @@ app.include_router(rest.router)
 # Conversational WebSocket (default)
 from app.api import websocket_conversational
 app.include_router(websocket_conversational.router)
-# Listen-only WebSocket (fallback)
-app.include_router(websocket.router)
 
 
 @app.on_event("startup")

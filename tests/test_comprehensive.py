@@ -251,17 +251,12 @@ def test_websocket_endpoints():
         print_test("Conversational WS URL", False, str(e))
         results.append(False)
     
-    # Test 2: Listen-Only WebSocket (verify route exists via docs)
+    # Test 2: Conversational WebSocket (verify route exists via docs)
     try:
         r = requests.get(f"{BASE_URL}/openapi.json")
         openapi = r.json()
         paths = openapi.get("paths", {})
-        listen_only_exists = any("listen-only" in path for path in paths.keys())
         conversational_exists = any("/ws/{session_id}" in path and "listen-only" not in path for path in paths.keys())
-        passed = listen_only_exists
-        print_test("Listen-Only WS Route", passed, "Route available in OpenAPI spec")
-        results.append(passed)
-        
         passed = conversational_exists
         print_test("Conversational WS Route", passed, "Route available in OpenAPI spec")
         results.append(passed)
@@ -273,79 +268,6 @@ def test_websocket_endpoints():
 
 
 # =============================================================================
-# GCP SERVICE TESTS
-# =============================================================================
-
-def test_gcp_services():
-    """Test GCP service connectivity (requires credentials)."""
-    print_header("GCP SERVICE TESTS")
-    results = []
-    
-    # Test 1: GCP Credentials
-    try:
-        from google.auth import default
-        credentials, project = default()
-        passed = credentials is not None
-        print_test("GCP Credentials (ADC)", passed, f"Project: {project or 'Not set'}")
-        results.append(passed)
-    except Exception as e:
-        print_test("GCP Credentials (ADC)", False, str(e))
-        results.append(False)
-    
-    # Test 2: Speech-to-Text API
-    try:
-        from google.cloud import speech
-        client = speech.SpeechClient()
-        passed = client is not None
-        print_test("Speech-to-Text API", passed, "Client initialized")
-        results.append(passed)
-    except Exception as e:
-        print_test("Speech-to-Text API", False, str(e))
-        results.append(False)
-    
-    # Test 3: Text-to-Speech API
-    try:
-        from google.cloud import texttospeech
-        client = texttospeech.TextToSpeechClient()
-        # List available voices to verify API access
-        voices = client.list_voices(language_code="ur-PK")
-        urdu_voices = [v.name for v in voices.voices if "ur" in v.name.lower()]
-        passed = len(urdu_voices) > 0
-        print_test("Text-to-Speech API", passed, f"Urdu voices: {len(urdu_voices)} available")
-        results.append(passed)
-    except Exception as e:
-        print_test("Text-to-Speech API", False, str(e))
-        results.append(False)
-    
-    # Test 4: Cloud Storage
-    try:
-        from google.cloud import storage
-        client = storage.Client()
-        passed = client is not None
-        print_test("Cloud Storage API", passed, "Client initialized")
-        results.append(passed)
-    except Exception as e:
-        print_test("Cloud Storage API", False, str(e))
-        results.append(False)
-    
-    # Test 5: Gemini API
-    try:
-        import google.generativeai as genai
-        from app.config import settings
-        if settings.GEMINI_API_KEY:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-2.0-flash-exp')
-            passed = model is not None
-            print_test("Gemini API", passed, "Model initialized")
-        else:
-            print_test("Gemini API", False, "API key not set in .env")
-            passed = False
-        results.append(passed)
-    except Exception as e:
-        print_test("Gemini API", False, str(e))
-        results.append(False)
-    
-    return results
 
 
 # =============================================================================
@@ -376,9 +298,6 @@ def run_all_tests():
     ws_results = test_websocket_endpoints()
     all_results.extend(ws_results)
     
-    # GCP Tests
-    gcp_results = test_gcp_services()
-    all_results.extend(gcp_results)
     
     # Summary
     print_header("TEST SUMMARY")

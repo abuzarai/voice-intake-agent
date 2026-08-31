@@ -1,8 +1,6 @@
 """Audio processing utilities."""
 
 import base64
-import numpy as np
-from typing import Dict, Any
 
 
 def base64_to_pcm(base64_audio: str) -> bytes:
@@ -67,44 +65,3 @@ def calculate_audio_duration(audio_bytes: bytes, sample_rate: int = 16000,
     return num_samples / sample_rate
 
 
-def check_audio_quality(pcm_audio: bytes, min_amplitude: float = 100.0) -> Dict[str, Any]:
-    """Perform basic audio quality checks.
-    
-    Args:
-        pcm_audio: PCM audio bytes (16-bit LE). If input is compressed (e.g., webm/opus),
-            we can't measure amplitude reliably, so we return an 'unknown' quality.
-        min_amplitude: Minimum acceptable amplitude
-        
-    Returns:
-        Dictionary with quality metrics and warnings
-    """
-    # If this doesn't look like raw 16-bit PCM, skip amplitude checks
-    if len(pcm_audio) % 2 != 0:
-        return {
-            "max_amplitude": None,
-            "mean_amplitude": None,
-            "is_silent": False,
-            "warnings": ["Audio format not PCM; quality unknown"],
-            "quality": "unknown"
-        }
-
-    # Convert bytes to numpy array
-    audio_array = np.frombuffer(pcm_audio, dtype=np.int16)
-    
-    # Calculate metrics
-    max_amplitude = np.max(np.abs(audio_array))
-    mean_amplitude = np.mean(np.abs(audio_array))
-    
-    warnings = []
-    if max_amplitude < min_amplitude:
-        warnings.append("Audio level too low - microphone may be muted or too far")
-    if mean_amplitude < 10:
-        warnings.append("Very low audio signal - check microphone connection")
-    
-    return {
-        "max_amplitude": float(max_amplitude),
-        "mean_amplitude": float(mean_amplitude),
-        "is_silent": max_amplitude < 10,
-        "warnings": warnings,
-        "quality": "good" if not warnings else "poor"
-    }

@@ -17,7 +17,6 @@ pydantic-settings>=2.7.0
 httpx>=0.26.0
 
 # Audio processing
-numpy>=2.2.0
 
 # Environment variables
 python-dotenv>=1.0.0
