@@ -244,6 +244,6 @@ gcloud alpha billing accounts get-iam-policy BILLING_ACCOUNT_ID
 ✅ Environment variables set
 
 **Next steps:**
-1. Run the application locally: `python -m uvicorn app.main:app --reload`
+1. Run the application locally: `uv run uvicorn app.main:app --reload`
 2. Test the API endpoints
 3. Deploy to Cloud Run
