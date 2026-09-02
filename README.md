@@ -3,7 +3,7 @@
 > Final Year Project, AI microservice · Part of the [Insafdaar](https://github.com/abuzarai/insafdaar-webapp) legal case management platform.  
 > A cost-efficient bilingual (Urdu/English) legal intake service conducting structured interviews over WebSocket audio with real-time transcription and AI classification.
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-PolyForm_Noncommercial-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![WebSockets](https://img.shields.io/badge/WebSockets-Coversational-010101?logo=socket.io&logoColor=white)](https://websockets.readthedocs.io/)
@@ -415,4 +415,4 @@ voice-intake-agent/
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE).
+Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use requires written permission from the author.
