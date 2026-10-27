@@ -18,6 +18,7 @@ URLs, logs and source control.
 | `LIVE_API_KEY` | Unset | Dedicated Gemini API key, 1–256 characters. |
 | `LIVE_MODEL` | Unset | Explicit model identifier; no default or automatic selection. |
 | `LIVE_FREE_TIER_ATTESTED` | `false` | Required attestation before provider operations; does not verify eligibility or prevent charges. |
+| `LIVE_STUN_URL` | Unset | Optional explicit `stun:host[:port]` for server-side mapped-candidate discovery. No credentials or automatic server selection. |
 | `LIVE_CAPABILITY_TTL_SECONDS` | `300` | Absolute session lifetime, 30–300 seconds. |
 | `LIVE_MAX_SESSIONS` | `16` | Retained session limit, 1–64, including stopped sessions until expiry. |
 | `LIVE_ADMISSIONS_PER_MINUTE` | `6` | Successful admissions per fixed minute, 1–60, per process. |
@@ -102,7 +103,9 @@ process exit.
 It checks local liveness only. It does not test provider credentials, available
 call capacity, SDK cleanup or media reachability.
 
-The WebRTC adapter uses an empty ICE-server list. The service has no TURN
+The WebRTC adapter uses an empty ICE-server list unless `LIVE_STUN_URL` is
+explicitly configured. STUN discovers a mapped address; it is not a media relay
+and does not open firewall or container ports. The service has no TURN
 configuration or bundled reverse proxy. Container/network topology, HTTPS,
 firewall rules and any media relay belong to the application deployment. HTTP
 health and signaling success alone do not establish remote audio connectivity.

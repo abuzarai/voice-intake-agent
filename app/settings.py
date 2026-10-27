@@ -1,3 +1,5 @@
+import re
+
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,6 +15,7 @@ class Settings(BaseSettings):
     LIVE_API_KEY: SecretStr | None = Field(default=None, min_length=1, max_length=256)
     LIVE_MODEL: str | None = Field(default=None, min_length=1, max_length=128)
     LIVE_FREE_TIER_ATTESTED: bool = False
+    LIVE_STUN_URL: str | None = Field(default=None, max_length=256, repr=False)
     CORS_ORIGINS: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
@@ -20,13 +23,29 @@ class Settings(BaseSettings):
     )
 
     @field_validator(
-        "LIVE_BOOTSTRAP_SECRET", "LIVE_API_KEY", "LIVE_MODEL", mode="before"
+        "LIVE_BOOTSTRAP_SECRET",
+        "LIVE_API_KEY",
+        "LIVE_MODEL",
+        "LIVE_STUN_URL",
+        mode="before",
     )
     @classmethod
     def empty_optional_configuration(cls, value):
         # Compose substitutes absent optional values with empty strings. Keep the
         # disabled service bootable; admission still rejects missing credentials.
         return None if isinstance(value, str) and not value.strip() else value
+
+    @field_validator("LIVE_STUN_URL")
+    @classmethod
+    def validate_stun_url(cls, value):
+        if value is None:
+            return None
+        match = re.fullmatch(
+            r"stun:([A-Za-z0-9][A-Za-z0-9.-]*)(?::([0-9]{1,5}))?", value
+        )
+        if match is None or (match[2] is not None and not 1 <= int(match[2]) <= 65535):
+            raise ValueError("Expected an explicit STUN host and optional valid port")
+        return value
 
     @property
     def cors_origins_list(self) -> list[str]:

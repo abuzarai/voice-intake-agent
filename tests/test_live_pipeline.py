@@ -378,7 +378,7 @@ async def test_actual_public_connection_lifecycle_with_socket_free_aiortc_peer(
             self.closed = True
 
     monkeypatch.setattr(connection_module, "RTCPeerConnection", Peer)
-    connection = pipeline.LiveAdapter.connection()
+    connection = pipeline.LiveAdapter().connection()
     assert connection.get_answer() is None
     await connection.initialize(sdp="fictional-offer", type="offer")
     answer = connection.get_answer()
@@ -392,6 +392,18 @@ async def test_actual_public_connection_lifecycle_with_socket_free_aiortc_peer(
     await connection.disconnect()
     assert connection.pc.closed
     await connection.cleanup()
+
+
+def test_adapter_uses_only_explicit_stun_configuration(pipeline, monkeypatch):
+    received = []
+    monkeypatch.setattr(
+        pipeline,
+        "SmallWebRTCConnection",
+        lambda **kwargs: received.append(kwargs["ice_servers"]),
+    )
+    pipeline.LiveAdapter().connection()
+    pipeline.LiveAdapter(stun_url="stun:relay.example.invalid:3478").connection()
+    assert received == [[], ["stun:relay.example.invalid:3478"]]
 
 
 @pytest.mark.asyncio

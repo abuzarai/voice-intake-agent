@@ -48,6 +48,7 @@ class LiveCleanupPending(ValueError):
 class LiveProviderConfig:
     api_key: str = field(repr=False)
     model: str
+    stun_url: str | None = field(default=None, repr=False)
 
     @classmethod
     def from_settings(cls, settings: "Settings") -> "LiveProviderConfig":
@@ -61,7 +62,7 @@ class LiveProviderConfig:
             or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", model) is None
         ):
             raise LiveRuntimeUnavailable()
-        return cls(key.get_secret_value().strip(), model)
+        return cls(key.get_secret_value().strip(), model, settings.LIVE_STUN_URL)
 
 
 @dataclass
@@ -367,7 +368,7 @@ class LiveRuntime:
         if self._adapter_factory is None:
             from app.adapters.pipecat_live.pipeline import LiveAdapter
 
-            adapter = LiveAdapter()
+            adapter = LiveAdapter(stun_url=config.stun_url)
         else:
             adapter = self._adapter_factory()
         if not self._live(call):

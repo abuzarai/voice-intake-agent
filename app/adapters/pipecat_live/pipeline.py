@@ -273,9 +273,11 @@ class LiveAdapter:
     # Use public connection primitives for that narrow orchestration instead.
     pipeline = LivePipeline
 
-    @staticmethod
-    def connection():
-        return SmallWebRTCConnection(ice_servers=[])
+    def __init__(self, *, stun_url=None):
+        self._ice_servers = [stun_url] if stun_url else []
+
+    def connection(self):
+        return SmallWebRTCConnection(ice_servers=self._ice_servers)
 
     @staticmethod
     def candidate(value):
