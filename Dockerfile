@@ -1,40 +1,12 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
-
-# Install uv (standalone binary; pin for reproducibility)
-COPY --from=ghcr.io/astral-sh/uv:0.5.14 /uv /uvx /bin/
-
-# Set working directory
+FROM python:3.12-slim
+COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /bin/uv
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy dependency files first for better caching
+ENV UV_COMPILE_BYTECODE=0 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY pyproject.toml uv.lock ./
-
-# Install Python dependencies from locked graph
 RUN uv sync --frozen --no-dev --no-install-project
-
-# Copy application code
 COPY app/ ./app/
-
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
-# Prefer the project venv (uv sync created .venv)
-ENV PATH="/app/.venv/bin:${PATH}"
-
-# Expose port (Cloud Run will set PORT env var)
+RUN useradd --uid 10001 --no-create-home live
+USER 10001:10001
+ENV PATH="/app/.venv/bin:$PATH" HOME=/tmp
 EXPOSE 8000
-
-# Health check (matches FastAPI /api/v1/health)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=2)" || exit 1
-
-# Start application (Cloud Run sets PORT env var)
-CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["python", "-m", "uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log", "--log-level", "critical", "--timeout-graceful-shutdown", "45", "--no-proxy-headers"]

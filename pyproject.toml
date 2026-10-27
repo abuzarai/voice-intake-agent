@@ -1,23 +1,55 @@
 [project]
 name = "voice-intake-agent"
-version = "1.0.0"
-description = "Insafdaar bilingual voice intake agent (FastAPI + WebSockets + Gemini STT)"
-requires-python = ">=3.11"
+version = "2.0.0"
+description = "Insafdaar Live-first Urdu/English voice intake and same-session draft backend"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.109.0",
-    "uvicorn[standard]>=0.27.0",
-    "websockets>=12.0",
-    "google-genai>=1.0.0",
-    "edge-tts>=7.0.0",
+    "uvicorn>=0.27.0",
+    "pipecat-ai[google,webrtc]==1.12.0",
+    "google-genai==2.19.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
-    "httpx>=0.26.0",
-    "python-dotenv>=1.0.0",
-    "python-json-logger>=2.0.7",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.26.0",
     "pytest>=7.4.4",
     "pytest-asyncio>=0.23.3",
+    "ruff==0.14.14",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "unit: isolated domain, validation, registry and controller behavior",
+    "integration: in-process application components, ASGI and import isolation; fake media/provider",
+    "sdk: pinned SDK component/compatibility checks; no sockets or provider calls",
+]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+required-version = "==0.14.14"
+target-version = "py312"
+line-length = 88
+extend-exclude = [".pi", "data", "output", "research/evidence", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# SDK diagnostics must be silenced before importing payload-bearing modules.
+"app/adapters/pipecat_live/pipeline.py" = ["E402"]
+"app/adapters/pipecat_live/gemini.py" = ["E402"]
+"app/adapters/pipecat_live/tools.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

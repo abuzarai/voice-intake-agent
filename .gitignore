@@ -35,12 +35,6 @@ env/
 !.env.example
 .env.local
 
-# GCP Credentials (NEVER COMMIT THESE)
-*.json
-!deployment/*.json
-service-account*.json
-credentials*.json
-
 # IDE
 .vscode/
 .idea/
@@ -56,10 +50,8 @@ Thumbs.db
 *.log
 logs/
 
-# Testing
+# Testing / lint caches
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
-
-# Docker
-.dockerignore

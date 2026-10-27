@@ -1,418 +1,95 @@
-# Voice Interview Agent
+# Insafdaar voice intake
 
-> Final Year Project, AI microservice · Part of the [Insafdaar](https://github.com/abuzarai/insafdaar-webapp) legal case management platform.  
-> A cost-efficient bilingual (Urdu/English) legal intake service conducting structured interviews over WebSocket audio with real-time transcription and AI classification.
+Voice interview microservice for Insafdaar, built with Gemini Live and Pipecat.
+It supports Urdu, English and mixed-language conversations over WebRTC, with
+interruptions, live transcripts and structured intake proposals.
 
-[![License](https://img.shields.io/badge/License-PolyForm_Noncommercial-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![WebSockets](https://img.shields.io/badge/WebSockets-Coversational-010101?logo=socket.io&logoColor=white)](https://websockets.readthedocs.io/)
-[![Gemini](https://img.shields.io/badge/Gemini-API-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
+The service keeps session data in memory. The host application authenticates
+users, associates interviews with cases, and owns transcript storage, review,
+confirmation and submission.
 
----
+## Interview flow
 
-## What Is This?
+1. The application server authorizes the interview and obtains a short-lived
+   session capability. Provider credentials stay on the server.
+2. The browser connects through WebRTC. The service opens one Gemini Live session
+   and requests a brief welcome and first question before waiting for user speech.
+   Transcript events are published as conversation turns are captured.
+3. Prepare stops interview input and requests a structured proposal on the same
+   provider session. The application reads and saves the proposal for review.
+4. Stop closes the call and discards its proposal. Saved case data remains the
+   host application's responsibility.
 
-This microservice runs structured legal intake interviews over WebSocket audio. The agent speaks bilingual questions (Urdu/English), transcribes client replies with the Gemini API, classifies the legal domain and urgency, and forwards the structured result to the Express backend via webhook.
+Proposals are unconfirmed model output. Transcripts can be incomplete, especially
+after interruption or disconnect. Neither is a substitute for client review.
 
-It powers the **Voice Intake** feature inside the main Insafdaar webapp. Clients can speak their case details instead of filling long forms.
+## Local setup
 
----
+Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
 
-## Architecture
-
-```
-Browser (Microphone)
-     │
-     ▼  WebSocket (wss://)
-┌──────────────────────────────────────────────────────────────────┐
-│                   VOICE INTERVIEW AGENT (:8000)                   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐    │
-│  │            CONVERSATIONAL WEBSOCKET (primary)             │    │
-│  │                                                          │    │
-│  │  1. Agent speaks greeting (edge-tts Urdu/English)        │    │
-│  │  2. Client responds with audio chunks                     │    │
-│  │  3. Gemini transcribes audio (bilingual ur-PK/en-US)     │    │
-│  │  4. Conversation Manager (Gemini-driven) determines       │    │
-│  │     next question or signals completion                   │    │
-│  │  5. Agent speaks next question via edge-tts               │    │
-│  │  6. Repeat until all info gathered                        │    │
-│  │  7. Gemini produces LegalAnalysis (domain, urgency,       │    │
-│  │     entities, summary)                                    │    │
-│  │  8. Audio saved locally (7-day retention cleanup)         │    │
-│  │  9. Webhook POST to Express backend                       │    │
-│  └──────────────────────────────────────────────────────────┘    │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐    │
-│  │            REST API                                       │    │
-│  │   POST /api/v1/sessions       → Create session           │    │
-│  │   GET  /api/v1/sessions/{id}  → Get results              │    │
-│  │   GET  /api/v1/health         → Health check             │    │
-│  └──────────────────────────────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────────┘
-     │                    │                    │
-     ▼                    ▼                    ▼
-┌────────────┐    ┌────────────┐        ┌───────────────┐
-│   Gemini   │    │  Gemini    │        │  Local audio  │
-│  (audio →  │    │  2.5 Flash │        │  storage      │
-│  text)     │    │  (API key) │        │  (7-day       │
-│ (ur-PK/    │    │            │        │  cleanup)     │
-│  en-US)    │    └─────┬──────┘        └───────────────┘
-└────────────┘          │
-                   ┌────┴────┐
-                   │ Webhook │
-                   │  POST   │
-                   └────┬────┘
-                        │
-                   ┌────┴────┐
-                   │ Express │
-                   │ Backend │
-                   └─────────┘
+```sh
+uv sync --frozen --group dev --python 3.12
 ```
 
-Transcription, classification, and conversation control all use a single Gemini API key. There are no separate speech services, local models, or cloud storage dependencies.
+Start the service with Live disabled by default:
 
----
-
-<details>
-<summary>API Reference</summary>
-
-### REST Endpoints
-
-#### `POST /api/v1/sessions`
-
-Create a new interview session (per-IP rate limited).
-
-**Request:**
-```json
-{
-  "client_id": "user_123",
-  "metadata": { "case_id": 44 }
-}
+```sh
+uv run --no-sync python -m uvicorn app.main:create_app --factory \
+  --host 127.0.0.1 --port 8000 --workers 1 \
+  --no-access-log --log-level critical --no-proxy-headers \
+  --timeout-graceful-shutdown 45
 ```
 
-**Response** (201):
-```json
-{
-  "session_id": "abc123def456",
-  "ws_url": "wss://host/api/v1/ws/abc123def456",
-  "created_at": "2026-01-27T12:00:00",
-  "expires_at": "2026-01-27T13:00:00",
-  "status": "pending"
-}
+`GET /health` returns local liveness without contacting a provider. Enabling
+interviews requires explicit model, key, bootstrap secret and runtime settings;
+see [configuration](docs/configuration.md). The service does not load `.env`
+files automatically.
+
+## Development
+
+```sh
+uv run --no-sync pytest -q
+uv run --no-sync ruff check .
+uv run --no-sync ruff format --check .
 ```
 
-#### `GET /api/v1/sessions/{session_id}`
+Tests block network access and use fake media/provider seams. Each test belongs
+to one registered layer; the default command runs all three:
 
-Retrieve interview results after completion.
-
-**Response:**
-```json
-{
-  "session_id": "abc123def456",
-  "status": "completed",
-  "transcript": [
-    {"role": "agent", "message": "Apna naam batayein?", "timestamp": "..."},
-    {"role": "user", "message": "Mera naam Ali hai", "language": "ur-PK", "timestamp": "..."}
-  ],
-  "analysis": {
-    "primary_language": "urdu",
-    "legal_domain": "property_law",
-    "confidence_score": 0.92,
-    "key_entities": {
-      "parties": ["Ali Ahmed", "Sarfraz Khan"],
-      "locations": ["Lahore"],
-      "dates": ["January 2025"],
-      "amounts": ["5,00,000"]
-    },
-    "issue_summary": "Property boundary dispute between neighbours in Lahore",
-    "case_title_en": "Ali Ahmed vs. Sarfraz Khan",
-    "case_title_ur": "علی احمد بمقابلہ سرفراز خان",
-    "adr_suitable": true,
-    "adr_reasoning": "Dispute involves neighbours with ongoing relationship",
-    "urgency": "medium",
-    "urgency_reasoning": "No immediate court deadline mentioned"
-  },
-  "audio_duration_seconds": 180,
-  "audio_file": "interviews/abc123def456.webm",
-  "created_at": "2026-01-27T12:00:00",
-  "completed_at": "2026-01-27T12:03:00"
-}
+```sh
+uv run --no-sync pytest -q -m unit
+uv run --no-sync pytest -q -m integration
+uv run --no-sync pytest -q -m sdk
 ```
 
-#### `GET /api/v1/health`
-
-**Response:** `{"status": "healthy", "service": "voice-interview-agent", "version": "0.1.0", "timestamp": "..."}`
-
-#### `GET /`
-
-**Response:** `{"service": "Voice Interview Agent", "version": "0.1.0", "status": "running"}`
-
----
-
-### WebSocket Protocol (Conversational)
-
-**Endpoint:** `GET /api/v1/ws/{session_id}`
-
-The agent conducts a back-and-forth conversation:
-
-```
-AGENT: [TTS audio + text] "Apna naam batayein?" (What is your name?)
-CLIENT: [audio chunks] → [user_finished signal]
-SERVER: Gemini transcribes → Conversation Manager decides next question
-AGENT: [TTS audio + text] "Apni masla ki type batayein?" (Describe your issue)
-... continues until interview is complete ...
-AGENT: "Thank you, your interview is complete."
-SERVER: returns results, sends webhook
-```
-
-**Client → Server Messages:**
-
-| Type | Format | Description |
-|------|--------|-------------|
-| `audio` | `{"type":"audio","audio":"<base64>","sequence":1}` | Stream audio chunks (WebM Opus) |
-| `user_finished` | `{"type":"user_finished"}` | Signal end of current turn |
-| `end_interview` | `{"type":"end_interview"}` | End interview early |
-
-**Server → Client Messages:**
-
-| Type | Format | Description |
-|------|--------|-------------|
-| `agent_speech` | `{"type":"agent_speech","audio":"<base64>","text":"...","language":"ur","sequence":1}` | TTS-generated agent speech |
-| `transcript` | `{"type":"transcript","text":"...","is_final":true,"language":"ur-PK","confidence":0.95}` | Real-time transcription |
-| `conversation_status` | `{"type":"conversation_status","agent_state":"speaking|listening|thinking|complete","can_speak":true,"message_en":"...","message_ur":"..."}` | State indicator |
-| `results` | `{"type":"results","session_id":"...","transcript":[...],"analysis":{...}}` | Final results on completion |
-| `error` | `{"type":"error","message_en":"...","message_ur":"...","code":"SESSION_EXPIRED"}` | Error |
-| `status` | `{"type":"status","message_en":"...","message_ur":"..."}` | Status update |
-
-</details>
-
----
-
-## Core Services
-
-### Conversation Manager
-
-The Gemini-driven conversation flow engine:
-
-1. **17 predefined bilingual questions** covering: name, issue description, timeline, parties, location, financial impact, prior action, urgency, documentation, witnesses, desired outcome, police involvement, mediation attempts
-2. **Gemini-powered follow-up**: after each user response, Gemini decides:
-   - What information was extracted (`extracted_info`)
-   - Whether clarification is needed (`needs_clarification`)
-   - Which question to ask next or whether the interview is complete
-   - Custom rephrased questions based on context
-3. **Fallback sequence**: If Gemini fails to respond, falls back to a predefined question order
-4. **Completion criteria**: Minimum 3 info fields extracted, must have name + issue type
-5. **Max 20 questions** cap
-
-### Transcription
-
-- **Gemini audio transcription** (genai client, same API key). No local models or separate speech services are involved.
-- **Primary language**: Urdu (Pakistan), `ur-PK`
-- **Fallback language**: English (US), `en-US`
-- **Format**: WebM Opus → converted to PCM via ffmpeg before transcription
-- Measured ~0.16 WER on legal Urdu
-
-### Text-to-Speech
-
-edge-tts (Microsoft neural voices):
-
-| Language | Voice | Gender |
-|----------|-------|--------|
-| Urdu (ur, ur-PK, ur-IN) | `ur-PK-UzmaNeural` | Female |
-| English (en, en-US) | `en-US-AndrewNeural` | Male |
-
-- Generates MP3 audio at configurable speaking rate (0.5 to 2.0)
-- Returns base64-encoded audio for WebSocket delivery
-
-### Gemini Service
-
-- **Model**: `gemini-2.5-flash` via the Gemini API (API key, no GCP project)
-- **Two modes**:
-  - `analyze_transcript()`: final legal classification with full `LegalAnalysis` output
-  - `generate_json_response()`: conversation control (next question, extracted info, completion check)
-- **Temperature**: 0.2 (analysis), 0.3 (conversation)
-- **JSON extraction**: Strips markdown fences, brace-matching fallback; retries with backoff on transient failures
-
-### Question Bank
-
-17 bilingual questions covering the full legal intake scope:
-
-| Key | English | Urdu |
-|-----|---------|------|
-| `greeting` | "Apna naam batayein?" | "What is your name?" |
-| `issue_description` | "Apni masla ki type batayein?" | "Describe your legal issue" |
-| `timeline_start` | "Ye masla kab shuru hua?" | "When did this issue start?" |
-| `parties_involved` | "Is maslay mein aur kon log shamil hain?" | "Who else is involved?" |
-| ... | *(12 more questions)* | ... |
-| `acknowledgment_noted` | "Note kar liya, aur kuch?" | "Noted, what else?" |
-
-### Session Manager
-
-- In-memory session store with UUID v4 keys
-- 60-minute session timeout (auto-expiry with cleanup)
-- Audio chunk storage with size guardrails (~2.4MB max per session)
-- Transcript and analysis persistence
-
-### Storage Service
-
-- **Local filesystem** under `AUDIO_DIR` (no cloud storage)
-- 7-day retention with a nightly cleanup job
-- Audio saved as `interviews/{session_id}.webm` with metadata JSON
-
-### Webhook Service
-
-- POSTs structured `InterviewResult` to the Express backend
-- `X-Webhook-Secret` header for authentication (fail-closed)
-- Retries with exponential backoff (2s, 4s, 8s); results havehed for idempotent delivery
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| **Framework** | FastAPI + Uvicorn + WebSockets |
-| **Transcription** | Gemini API audio transcription (bilingual ur-PK/en-US) |
-| **Text-to-Speech** | edge-tts `ur-PK-UzmaNeural` / `en-US-AndrewNeural` |
-| **AI Classification** | Gemini 2.5 Flash via the Gemini API |
-| **Conversation Engine** | Gemini-driven with 17-question bilingual bank |
-| **Audio Storage** | Local filesystem (7-day retention, nightly cleanup) |
-| **Webhook** | httpx async with retry (3 attempts, exponential backoff) |
-| **Deployment** | Container in the Insafdaar compose stack (Oracle Cloud Infrastructure) |
-| **Language** | Python 3.11 |
-
----
-
-## Local Development
-
-### Prerequisites
-
-- Python 3.11+
-- Gemini API key ([AI Studio](https://aistudio.google.com/apikey))
-- `ffmpeg` installed locally
-
-### Setup
-
-```bash
-# Clone
-git clone https://github.com/abuzarai/voice-intake-agent.git
-cd voice-intake-agent
-
-# Install dependencies from the locked graph (pyproject.toml + uv.lock)
-uv sync
-
-# Environment
-cp .env.example .env
-# Edit .env with your Gemini API key
-```
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | None | Gemini API key (transcription + classification) |
-| `GEMINI_MODEL` | No | `gemini-2.5-flash` | Gemini model name |
-| `ENVIRONMENT` | No | `development` | `development` or `production` |
-| `SESSION_TIMEOUT_MINUTES` | No | `60` | Session expiry timeout |
-| `MAX_AUDIO_DURATION_SECONDS` | No | `600` | Max audio per session |
-| `AUDIO_RETENTION_DAYS` | No | `7` | Local audio retention |
-| `AUDIO_DIR` | No | `./data/audio` | Local audio storage directory |
-| `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated CORS origins |
-| `EXPRESS_WEBHOOK_URL` | No | None | Express backend webhook URL |
-| `EXPRESS_WEBHOOK_SECRET` | No | None | Shared webhook secret |
-| `LOG_LEVEL` | No | `INFO` | Logging level |
-
-### Run
-
-```bash
-uv run uvicorn app.main:app --reload
-```
-
-- API: `http://localhost:8000`
-- Swagger UI: `http://localhost:8000/docs` *(development builds only)*
-- Test UI: `http://localhost:8000/test` *(development builds only)*
-
-### Test
-
-```bash
-# REST API tests
-uv run pytest tests/test_rest_sessions_generated.py -v
-
-# Comprehensive suite
-uv run pytest tests/test_comprehensive.py -v
-
-# Quick smoke tests
-uv run pytest tests/test_quick.py -v
-```
-
----
-
-## Docker
-
-```bash
-docker build -t voice-intake-agent .
-docker run --rm -p 8000:8000 --env-file .env voice-intake-agent
-```
-
----
-
-## Deployment
-
-- **Platform**: container in the Insafdaar compose stack (Oracle Cloud Infrastructure); loopback-published and reached only through the host's TLS proxy
-- **Auth**: webhooks carry the shared `X-Webhook-Secret`; session creation and WebSocket handshakes are per-IP rate limited; docs/test UI are disabled in production builds
-- **Deploys**: handled by the main webapp's pipeline (GitHub Actions builds the image on a runner, ships it, and applies the stack)
-
----
-
-## Repository Structure
-
-```
-voice-intake-agent/
-├── app/
-│   ├── main.py                       # FastAPI entrypoint, CORS, routes
-│   ├── config.py                     # Pydantic settings (all env vars)
-│   ├── api/
-│   │   ├── rest.py                   # POST/GET sessions, health
-│   │   └── websocket_conversational.py  # Conversational WebSocket
-│   ├── middleware/
-│   │   ├── request_logging.py        # Request/response logging
-│   │   └── rate_limit.py             # Sliding-window per-IP limiter
-│   ├── models/
-│   │   ├── enums.py                  # LegalDomain, Language, Status, Urgency
-│   │   ├── schemas.py                # Pydantic request/response models
-│   │   └── conversation.py           # Conversation state, turn models
-│   ├── services/
-│   │   ├── gemini_service.py         # Gemini API (analysis + conversation)
-│   │   ├── stt_service.py            # Gemini audio transcription (bilingual)
-│   │   ├── tts_service.py            # edge-tts (Urdu/English)
-│   │   ├── session_service.py        # In-memory session & audio management
-│   │   ├── storage_service.py        # Local audio storage + cleanup
-│   │   ├── webhook_service.py        # Express backend webhook with retry
-│   │   ├── conversation_service.py   # Gemini-driven conversation manager
-│   │   └── question_bank.py          # 17 bilingual intake questions
-│   └── utils/
-│       ├── audio.py                  # Base64/PCM conversion, quality check
-│       └── logger.py                 # Bilingual (en/ur) structured logger
-├── tests/
-│   ├── test_rest_sessions_generated.py  # FastAPI TestClient tests
-│   ├── test_comprehensive.py         # Full suite (REST, services, models, WS)
-│   ├── test_quick.py                 # Smoke tests
-│   ├── test_api.py                   # Manual HTTP tests
-│   └── test_websocket.py             # Async WebSocket test
-├── docs/
-│   ├── gcp-setup.md                  # GCP-era setup guide (legacy)
-│   └── integration-guide.md          # Express + React integration reference
-├── scripts/
-├── test_ui.html                      # Interactive browser test UI (dev only)
-├── Dockerfile                        # Container build
-├── pyproject.toml                    # Dependencies & project metadata
-└── uv.lock                           # Locked dependency graph
-```
-
----
-
-## License
-
-Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use requires written permission from the author.
+- **Unit:** isolated domain, validation, registry and controller behavior.
+- **Integration:** in-process application components, ASGI routing and import
+  isolation, with fake media/provider boundaries.
+- **SDK:** component/compatibility checks against the installed pinned SDKs,
+  without real sockets or provider calls. Requires Python 3.12 and the locked
+  runtime dependencies; missing dependencies are not silently skipped.
+
+These checks do not establish real browser audio, provider response quality or
+webapp persistence. Those require separate acceptance through the webapp.
+
+## Runtime constraints
+
+- One active interview per process, including startup and cleanup. Use one worker;
+  session capabilities and call ownership are not shared between replicas.
+- Sessions last at most five minutes. Restarting loses unsaved in-memory data.
+- No automatic provider retry, reconnect or replacement session.
+- The WebRTC adapter currently uses no ICE servers. Remote connectivity
+  requires suitable networking; HTTPS alone does not relay WebRTC media.
+- Audio and conversation data are processed by Google Gemini. The host application
+  must provide the appropriate notice and consent flow. Provider terms,
+  eligibility and charges depend on the configured account and model.
+
+The root Dockerfile builds this service. Application deployment and orchestration
+are maintained with the webapp.
+
+## Documentation
+
+- [Configuration and container runtime](docs/configuration.md)
+- [API contract](docs/contracts.md)
+- [Transcript events and batch reads](docs/transcripts.md)
+- [Architecture](docs/architecture.md)
