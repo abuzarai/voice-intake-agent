@@ -5,7 +5,8 @@ ENV UV_COMPILE_BYTECODE=0 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY app/ ./app/
-RUN useradd --uid 10001 --no-create-home live
+RUN find /app/app -type d -exec chmod 755 {} + \
+    && useradd --uid 10001 --no-create-home live
 USER 10001:10001
 ENV PATH="/app/.venv/bin:$PATH" HOME=/tmp
 EXPOSE 8000
