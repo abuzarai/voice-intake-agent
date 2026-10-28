@@ -21,6 +21,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(application):
         try:
+            if services.settings.LIVE_ENABLED:
+                services.live_runtime.preload()
             yield
         finally:
             await services.shutdown()

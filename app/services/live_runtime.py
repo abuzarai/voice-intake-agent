@@ -9,6 +9,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass, field
+from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any, Callable
 from uuid import uuid4
@@ -117,6 +118,12 @@ class LiveRuntime:
         self._tasks: set[asyncio.Task] = set()
         self._shutting_down = False
         sessions.on_terminal = self._terminated
+
+    def preload(self):
+        """Load optional dependencies before readiness, without creating a call."""
+        if self._adapter_factory is None:
+            require_live_dependencies()
+            import_module("app.adapters.pipecat_live.pipeline")
 
     def _task(self, coroutine):
         task = asyncio.create_task(coroutine)

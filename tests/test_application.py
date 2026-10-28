@@ -1,6 +1,6 @@
 """Per-application ownership and lifecycle; all I/O is ASGI/fake only."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -95,6 +95,68 @@ def test_factory_rejects_inconsistent_injected_settings():
     services = LiveServices.build(original)
     with pytest.raises(ValueError, match="must own"):
         create_app(Settings(), services=services)
+
+
+def test_enabled_runtime_preloads_before_requests(monkeypatch):
+    application = create_app(configured("fictional-preload-secret-" + "x" * 32))
+    preload = Mock()
+    monkeypatch.setattr(application.state.live.live_runtime, "preload", preload)
+    preload.assert_not_called()
+    with TestClient(application) as client:
+        preload.assert_called_once_with()
+        assert client.get("/health").status_code == 200
+
+
+def test_disabled_runtime_does_not_load_optional_dependencies(monkeypatch):
+    application = create_app(Settings(LIVE_ENABLED=False))
+    preload = Mock()
+    monkeypatch.setattr(application.state.live.live_runtime, "preload", preload)
+    with TestClient(application) as client:
+        assert client.get("/health").status_code == 200
+    preload.assert_not_called()
+
+
+def test_preload_failure_prevents_readiness_and_still_cleans_up(monkeypatch):
+    from app.services.live_runtime import LiveRuntimeUnavailable
+
+    application = create_app(configured("fictional-preload-secret-" + "x" * 32))
+    runtime = application.state.live.live_runtime
+    preload = Mock(side_effect=LiveRuntimeUnavailable())
+    shutdown = AsyncMock()
+    monkeypatch.setattr(runtime, "preload", preload)
+    monkeypatch.setattr(runtime, "shutdown", shutdown)
+    with pytest.raises(LiveRuntimeUnavailable):
+        with TestClient(application):
+            pytest.fail("A failed preload must not admit requests")
+    shutdown.assert_awaited_once_with()
+
+
+def test_preload_imports_only_the_adapter_module(monkeypatch):
+    from app.services import live_runtime
+
+    dependencies = Mock()
+    importer = Mock()
+    monkeypatch.setattr(live_runtime, "require_live_dependencies", dependencies)
+    monkeypatch.setattr(live_runtime, "import_module", importer)
+    runtime = LiveServices.build(Settings()).live_runtime
+    runtime.preload()
+    dependencies.assert_called_once_with()
+    importer.assert_called_once_with("app.adapters.pipecat_live.pipeline")
+    assert runtime._active is None
+    assert not runtime._tasks
+
+
+def test_injected_adapter_does_not_import_production_dependencies(monkeypatch):
+    from app.services import live_runtime
+
+    dependencies = Mock()
+    importer = Mock()
+    monkeypatch.setattr(live_runtime, "require_live_dependencies", dependencies)
+    monkeypatch.setattr(live_runtime, "import_module", importer)
+    runtime = LiveServices.build(Settings(), adapter_factory=Mock()).live_runtime
+    runtime.preload()
+    dependencies.assert_not_called()
+    importer.assert_not_called()
 
 
 def test_shutdown_clears_registry_even_when_runtime_raises(monkeypatch):
