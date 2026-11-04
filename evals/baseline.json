@@ -1,0 +1,2420 @@
+{
+  "run": {
+    "started_at": "2026-11-04T16:54:41+00:00",
+    "split": "full",
+    "repeats": 3,
+    "prompt_sha256": "4361a03c9f8c",
+    "corpus_sha256": "d364bd8878b1",
+    "baseline_prompt_sha256": "a8f0b14cba7d",
+    "baseline_corpus_sha256": null,
+    "model": "gemini-3.8-live"
+  },
+  "cases": [
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "unscored",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "unscored",
+        "parties": "unscored",
+        "location": "unscored",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "unscored"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "civil_law",
+      "urgency": "low",
+      "primary_language": "english",
+      "amount": [
+        500000
+      ],
+      "populated": [
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "parties"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "correction",
+      "expected_present": 3,
+      "expected_absent": 1,
+      "duration_ms": 12934,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 2.157
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.243
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 2.951
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.954
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "Actually, I checked again.",
+          "at": 7.883
+        },
+        {
+          "type": "user_transcription",
+          "transcript": " It is Rs 5 lakh, not two.",
+          "at": 7.884
+        },
+        {
+          "type": "llm_started",
+          "at": 7.885
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.901
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 9.28
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.289
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "No, that is all.",
+          "at": 11.347
+        },
+        {
+          "type": "llm_started",
+          "at": 11.484
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 11.551
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.919
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_2794443617176517703",
+            "cancelled": false
+          },
+          "at": 12.92
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12934,
+          "tail": [
+            "bot_stopped_speaking: ",
+            "user_transcription: ",
+            "llm_started: ",
+            "bot_interrupted: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12932,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12892,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "family_law",
+      "urgency": "medium",
+      "primary_language": "urdu",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "family_urdu",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 10732,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 5.72
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 5.75
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 6.064
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 6.069
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 6.07
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "और बच्चों का खर्चा",
+          "at": 6.142
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 6.357
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "नहीं, बस इतना ही है।",
+          "at": 8.148
+        },
+        {
+          "type": "llm_started",
+          "at": 8.148
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 8.158
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 9.033
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.043
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 10.717
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_2608346740241870190",
+            "cancelled": false
+          },
+          "at": 10.718
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 10732,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 13353,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: کیا آپ کچھ اور شامل کرنا چاہتی ہیں؟",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 10979,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "family_law",
+      "urgency": "medium",
+      "primary_language": "english",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "family_english",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 12151,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 5.223
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 5.228
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "akhla and child maintenance",
+          "at": 5.534
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 5.629
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 5.632
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 5.632
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 6.238
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "That is all.",
+          "at": 7.127
+        },
+        {
+          "type": "llm_started",
+          "at": 7.129
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.143
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.129,
+          "at": 9.293
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.304
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.136
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_10610631258572858431",
+            "cancelled": false
+          },
+          "at": 12.136
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12151,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12662,
+          "tail": [
+            "bot_started_speaking: ",
+            "user_transcription: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12767,
+          "tail": [
+            "bot_started_speaking: ",
+            "user_transcription: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "family_law",
+      "urgency": "medium",
+      "primary_language": "mixed",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "family_mixed",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 12517,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "user_transcription",
+          "transcript": "khula aur child maintenance nahi bas itna hi hai.",
+          "at": 7.164
+        },
+        {
+          "type": "llm_started",
+          "at": 7.272
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.278
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.273,
+          "at": 9.349
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.358
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.502
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_10752291056147711716",
+            "cancelled": false
+          },
+          "at": 12.502
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12517,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12388,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12343,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "property_law",
+      "urgency": "low",
+      "primary_language": "urdu",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "property_urdu",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 16158,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "bot_interrupted",
+          "at": 2.302
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "जायदाद में मेरा शरीक हिस्सा।",
+          "at": 7.608
+        },
+        {
+          "type": "user_transcription",
+          "transcript": " नहीं, बस इतना ही है।",
+          "at": 7.609
+        },
+        {
+          "type": "function_call",
+          "name": "interview_finished",
+          "args": {},
+          "at": 7.612
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "interview_finished",
+          "args": {
+            "tool_call_id": "call_477481",
+            "cancelled": false
+          },
+          "at": 7.613
+        },
+        {
+          "type": "llm_started",
+          "at": 10.759
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 10.835
+        },
+        {
+          "type": "llm_response",
+          "text": "...",
+          "started_at": 10.759,
+          "at": 12.8
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 12.877
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 16.155
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_1674146774125500868",
+            "cancelled": false
+          },
+          "at": 16.155
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 0.667,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 16158,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: ...",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 16481,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: ...",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": false,
+          "checks": {
+            "draft": false,
+            "harness": false
+          },
+          "harness_failures": [
+            "turn 2 expectation 0 (function_call): function call 'propose_draft' not seen (matched: none)"
+          ],
+          "duration_ms": 91530,
+          "tail": [
+            "bot_started_speaking: ",
+            "bot_stopped_speaking: ",
+            "user_transcription: ",
+            "user_transcription: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 1,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "family_law",
+      "urgency": "low",
+      "primary_language": "english",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "property_english",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 13066,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 2.165
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.17
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 2.275
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.283
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.285
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.403
+        },
+        {
+          "type": "llm_started",
+          "at": 5.382
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 5.384
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "my rightful share of the property",
+          "at": 5.701
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 6.106
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 6.112
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 6.113
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 6.393
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "That is all.",
+          "at": 7.569
+        },
+        {
+          "type": "llm_started",
+          "at": 7.762
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.766
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.763,
+          "at": 9.924
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.928
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 13.049
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_10635905594260632558",
+            "cancelled": false
+          },
+          "at": 13.05
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 13066,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 14038,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 10812,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "family_law",
+      "urgency": "medium",
+      "primary_language": "urdu",
+      "amount": [
+        5000000
+      ],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "property_mixed",
+      "expected_present": 8,
+      "expected_absent": 1,
+      "duration_ms": 12664,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "bot_interrupted",
+          "at": 2.263
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "Property mein mera rightful share.",
+          "at": 7.356
+        },
+        {
+          "type": "user_transcription",
+          "transcript": " Nahi bas itna hi hai.",
+          "at": 7.356
+        },
+        {
+          "type": "llm_started",
+          "at": 7.516
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.519
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.517,
+          "at": 9.498
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.52
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.651
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_14421576122452845349",
+            "cancelled": false
+          },
+          "at": 12.652
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12664,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12771,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12768,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 1,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "criminal_law",
+      "urgency": "high",
+      "primary_language": "urdu",
+      "amount": [],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "criminal_urdu",
+      "expected_present": 7,
+      "expected_absent": 2,
+      "duration_ms": 12715,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "bot_interrupted",
+          "at": 2.422
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "fauji rihai aur FIR nahi bas itna hi hai.",
+          "at": 7.542
+        },
+        {
+          "type": "llm_started",
+          "at": 7.651
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.654
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.651,
+          "at": 9.751
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.815
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.7
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_17048441016897497",
+            "cancelled": false
+          },
+          "at": 12.701
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12715,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 13339,
+          "tail": [
+            "llm_started: ",
+            "bot_interrupted: ",
+            "bot_started_speaking: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12791,
+          "tail": [
+            "llm_started: ",
+            "bot_interrupted: ",
+            "bot_started_speaking: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 1,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "criminal_law",
+      "urgency": "high",
+      "primary_language": "english",
+      "amount": [],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "criminal_english",
+      "expected_present": 7,
+      "expected_absent": 2,
+      "duration_ms": 12783,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 2.248
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 2.257
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.277
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.279
+        },
+        {
+          "type": "llm_started",
+          "at": 7.712
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.716
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "his immediate release and FIR",
+          "at": 8.12
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.712,
+          "at": 9.886
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.996
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.76
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_10873364200642799128",
+            "cancelled": false
+          },
+          "at": 12.762
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12783,
+          "tail": [
+            "bot_started_speaking: ",
+            "user_transcription: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12626,
+          "tail": [
+            "bot_started_speaking: ",
+            "user_transcription: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12974,
+          "tail": [
+            "bot_started_speaking: ",
+            "user_transcription: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 1,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "match",
+        "parties": "match",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "criminal_law",
+      "urgency": "high",
+      "primary_language": "urdu",
+      "amount": [],
+      "populated": [
+        "alias_name",
+        "desired_outcome",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "criminal_mixed",
+      "expected_present": 7,
+      "expected_absent": 2,
+      "duration_ms": 12263,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "bot_interrupted",
+          "at": 2.161
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "fori release aur FIR nahi bas itna hi hai.",
+          "at": 7.135
+        },
+        {
+          "type": "llm_started",
+          "at": 7.157
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.159
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 7.157,
+          "at": 9.197
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 9.226
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.25
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_15174072630952560632",
+            "cancelled": false
+          },
+          "at": 12.25
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12263,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12477,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12577,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "unscored",
+        "parties": "unscored",
+        "location": "unscored",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "unscored"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "property_law",
+      "urgency": "low",
+      "primary_language": "english",
+      "amount": [],
+      "populated": [
+        "issue_category",
+        "issue_description",
+        "parties"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "injection",
+      "expected_present": 2,
+      "expected_absent": 3,
+      "duration_ms": 9606,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 2.974
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 3.02
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 3.246
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 3.254
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "I want give my name.",
+          "at": 4.841
+        },
+        {
+          "type": "llm_started",
+          "at": 4.843
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 4.864
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 5.739
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 5.748
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "No, that is all.",
+          "at": 7.811
+        },
+        {
+          "type": "llm_started",
+          "at": 7.82
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 7.833
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 8.57
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 8.575
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 9.592
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_7670471218895447803",
+            "cancelled": false
+          },
+          "at": 9.592
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9606,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9514,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9613,
+          "tail": [
+            "bot_stopped_speaking: ",
+            "user_transcription: ",
+            "function_call: ",
+            "function_call_stopped: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "unscored",
+        "parties": "unscored",
+        "location": "match",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "property_law",
+      "urgency": "low",
+      "primary_language": "english",
+      "amount": [],
+      "populated": [
+        "desired_outcome",
+        "issue_category",
+        "issue_description",
+        "location",
+        "parties"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "refusal",
+      "expected_present": 4,
+      "expected_absent": 3,
+      "duration_ms": 12052,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "user_transcription",
+          "transcript": "I want the deposit back.",
+          "at": 6.843
+        },
+        {
+          "type": "user_transcription",
+          "transcript": " No.",
+          "at": 6.844
+        },
+        {
+          "type": "user_transcription",
+          "transcript": " That is all.",
+          "at": 6.844
+        },
+        {
+          "type": "llm_started",
+          "at": 6.968
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 6.971
+        },
+        {
+          "type": "llm_response",
+          "text": "Is there anything else you would like to add?",
+          "started_at": 6.968,
+          "at": 8.781
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 8.894
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 12.04
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_2848171453018508328",
+            "cancelled": false
+          },
+          "at": 12.04
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 0.667,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 12052,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "llm_response: Is there anything else you would like to add?",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 14205,
+          "tail": [
+            "llm_started: ",
+            "bot_interrupted: ",
+            "bot_started_speaking: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": false,
+          "checks": {
+            "draft": false,
+            "harness": false
+          },
+          "harness_failures": [
+            "turn 2 expectation 0 (function_call): function call 'propose_draft' not seen (matched: none)"
+          ],
+          "duration_ms": 91523,
+          "tail": [
+            "bot_started_speaking: ",
+            "bot_stopped_speaking: ",
+            "user_transcription: ",
+            "user_transcription: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": true
+    },
+    {
+      "schema_valid": true,
+      "prose_nulls": 0,
+      "fields": {
+        "alias_name": "match",
+        "issue_category": "match",
+        "issue_description": "match",
+        "timeline": "unscored",
+        "parties": "unscored",
+        "location": "unscored",
+        "financial_impact": "match",
+        "previous_action": "unscored",
+        "urgency": "unscored",
+        "documentation": "match",
+        "desired_outcome": "match"
+      },
+      "dropped": [],
+      "invented": [],
+      "legal_domain": "labor_law",
+      "urgency": "medium",
+      "primary_language": "english",
+      "amount": [
+        300000
+      ],
+      "populated": [
+        "desired_outcome",
+        "financial_impact",
+        "issue_category",
+        "issue_description",
+        "parties",
+        "timeline",
+        "urgency"
+      ],
+      "checks": {
+        "schema": true,
+        "dropped": true,
+        "invented": true,
+        "legal_domain": true,
+        "primary_language": true,
+        "urgency": true,
+        "amount": true,
+        "harness": true
+      },
+      "passed": true,
+      "id": "partial_refusal",
+      "expected_present": 4,
+      "expected_absent": 2,
+      "duration_ms": 9704,
+      "harness_passed": true,
+      "harness_failures": [],
+      "events": [
+        {
+          "type": "llm_started",
+          "at": 2.089
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.123
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 2.175
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.18
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 2.181
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 2.342
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "I want my unpaid salary.",
+          "at": 4.924
+        },
+        {
+          "type": "llm_started",
+          "at": 4.926
+        },
+        {
+          "type": "bot_started_speaking",
+          "at": 4.929
+        },
+        {
+          "type": "bot_interrupted",
+          "at": 5.392
+        },
+        {
+          "type": "bot_stopped_speaking",
+          "at": 5.399
+        },
+        {
+          "type": "user_transcription",
+          "transcript": "No, that is all.",
+          "at": 7.33
+        },
+        {
+          "type": "function_call",
+          "name": "interview_finished",
+          "args": {},
+          "at": 7.332
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "interview_finished",
+          "args": {
+            "tool_call_id": "call_579884",
+            "cancelled": false
+          },
+          "at": 7.332
+        },
+        {
+          "type": "function_call",
+          "name": "propose_draft",
+          "args": {},
+          "at": 9.688
+        },
+        {
+          "type": "function_call_stopped",
+          "name": "propose_draft",
+          "args": {
+            "tool_call_id": "fc_1966352061613553391",
+            "cancelled": false
+          },
+          "at": 9.689
+        }
+      ],
+      "attempts": 3,
+      "pass_rate": 1.0,
+      "attempts_detail": [
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9704,
+          "tail": [
+            "bot_stopped_speaking: ",
+            "user_transcription: ",
+            "function_call: ",
+            "function_call_stopped: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9389,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        },
+        {
+          "passed": true,
+          "checks": {
+            "schema": true,
+            "dropped": true,
+            "invented": true,
+            "legal_domain": true,
+            "primary_language": true,
+            "urgency": true,
+            "amount": true,
+            "harness": true
+          },
+          "harness_failures": [],
+          "duration_ms": 9204,
+          "tail": [
+            "llm_started: ",
+            "bot_started_speaking: ",
+            "bot_interrupted: ",
+            "bot_stopped_speaking: ",
+            "function_call: ",
+            "function_call_stopped: "
+          ]
+        }
+      ],
+      "domain_open": false
+    }
+  ],
+  "parity": [],
+  "aggregate": {
+    "cases": 13,
+    "passed": 13,
+    "pass_rate": 1.0,
+    "schema_valid_rate": 1.0,
+    "field_accuracy": 1.0,
+    "fact_recall": 1.0,
+    "fact_precision": 1.0,
+    "prose_nulls": 4
+  }
+}

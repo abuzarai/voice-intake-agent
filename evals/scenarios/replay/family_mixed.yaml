@@ -1,0 +1,50 @@
+name: family_mixed
+tags:
+- family
+- mixed
+scenarios:
+- name: replay
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: Assalam o alaikum
+  - role: assistant
+    content: Walaikum assalam. Aap ko kis qism ki legal help chahiye?
+  - role: user
+    content: Mere husband ne mujhe chhod diya hai. I want khula.
+  - role: assistant
+    content: Samajh gaya. Aap ka preferred name kya hai?
+  - role: user
+    content: Mujhe Ayesha keh lein.
+  - role: assistant
+    content: Aap kahan rehti hain?
+  - role: user
+    content: Lahore mein.
+  - role: assistant
+    content: Kya aap ke bachay hain?
+  - role: user
+    content: Haan, do bachay hain, eight aur five years ke.
+  - role: assistant
+    content: Husband kab se alag reh rahe hain?
+  - role: user
+    content: About one year se.
+  - role: assistant
+    content: Kya woh child maintenance de rahe hain?
+  - role: user
+    content: Nahi, 50 lakh rupees owed hain aur kuch nahi de rahe.
+  - role: assistant
+    content: Aap kya chahti hain?
+  turns:
+  - user: Khula aur child maintenance.
+    audio: ../../audio/family_mixed/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: Nahi, bas itna hi hai.
+    audio: ../../audio/family_mixed/02_closing.wav
+  - expect:
+    - event: function_call
+      calls:
+      - name: propose_draft

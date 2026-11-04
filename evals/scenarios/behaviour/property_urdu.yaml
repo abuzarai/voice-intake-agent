@@ -1,0 +1,53 @@
+name: property_urdu
+tags:
+- property
+- urdu
+- behaviour
+scenarios:
+- name: closure
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: السلام علیکم
+  - role: assistant
+    content: وعلیکم السلام۔ آپ کو کس قسم کی قانونی مدد چاہیے؟
+  - role: user
+    content: میرے والد کا انتقال ہو گیا ہے اور جائیداد تقسیم نہیں ہوئی۔
+  - role: assistant
+    content: آپ کا پسندیدہ نام کیا ہے؟
+  - role: user
+    content: مجھے کامران کہہ لیں۔
+  - role: assistant
+    content: جائیداد کہاں ہے؟
+  - role: user
+    content: لاہور میں، ایک پلاٹ ہے۔
+  - role: assistant
+    content: کتنے ورثاء ہیں؟
+  - role: user
+    content: تین بیٹے اور دو بیٹیاں ہیں۔
+  - role: assistant
+    content: والد کا انتقال کب ہوا؟
+  - role: user
+    content: دو سال پہلے۔
+  - role: assistant
+    content: جائیداد کی قیمت کتنی ہے؟
+  - role: user
+    content: تقریباً پچاس لاکھ روپے۔
+  - role: assistant
+    content: آپ کیا چاہتے ہیں؟
+  - role: assistant
+    content: شکریہ۔ کیا آپ کچھ اور شامل کرنا چاہیں گے؟
+  turns:
+  - user: جائیداد میں میرا شرعی حصہ۔
+    audio: ../../audio/property_urdu/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: نہیں، بس اتنا ہی ہے۔
+    audio: ../../audio/property_urdu/02_closing.wav
+    expect:
+    - event: function_call
+      calls:
+      - name: interview_finished

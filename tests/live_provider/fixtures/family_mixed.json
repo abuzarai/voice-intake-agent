@@ -1,0 +1,91 @@
+{
+  "case": "family",
+  "language": "mixed",
+  "turns": [
+    {
+      "role": "user",
+      "content": "Assalam o alaikum"
+    },
+    {
+      "role": "assistant",
+      "content": "Walaikum assalam. Aap ko kis qism ki legal help chahiye?"
+    },
+    {
+      "role": "user",
+      "content": "Mere husband ne mujhe chhod diya hai. I want khula."
+    },
+    {
+      "role": "assistant",
+      "content": "Samajh gaya. Aap ka preferred name kya hai?"
+    },
+    {
+      "role": "user",
+      "content": "Mujhe Ayesha keh lein."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap kahan rehti hain?"
+    },
+    {
+      "role": "user",
+      "content": "Lahore mein."
+    },
+    {
+      "role": "assistant",
+      "content": "Kya aap ke bachay hain?"
+    },
+    {
+      "role": "user",
+      "content": "Haan, do bachay hain, eight aur five years ke."
+    },
+    {
+      "role": "assistant",
+      "content": "Husband kab se alag reh rahe hain?"
+    },
+    {
+      "role": "user",
+      "content": "About one year se."
+    },
+    {
+      "role": "assistant",
+      "content": "Kya woh child maintenance de rahe hain?"
+    },
+    {
+      "role": "user",
+      "content": "Nahi, 50 lakh rupees owed hain aur kuch nahi de rahe."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap kya chahti hain?"
+    },
+    {
+      "role": "user",
+      "content": "Khula aur child maintenance."
+    }
+  ],
+  "expect": {
+    "legal_domain": "family_law",
+    "urgency_any": [
+      "medium",
+      "high"
+    ],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "financial_impact",
+      "desired_outcome"
+    ],
+    "facts_absent": [
+      "documentation"
+    ],
+    "amount": 5000000,
+    "primary_language_any": [
+      "mixed",
+      "urdu"
+    ]
+  }
+}

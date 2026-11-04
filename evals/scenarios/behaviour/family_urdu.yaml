@@ -1,0 +1,53 @@
+name: family_urdu
+tags:
+- family
+- urdu
+- behaviour
+scenarios:
+- name: closure
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: السلام علیکم
+  - role: assistant
+    content: وعلیکم السلام۔ آپ کو کس قسم کی قانونی مدد چاہیے؟
+  - role: user
+    content: میرے شوہر نے مجھے چھوڑ دیا ہے۔ میں خلع چاہتی ہوں۔
+  - role: assistant
+    content: سمجھ گیا۔ آپ کا پسندیدہ نام کیا ہے؟
+  - role: user
+    content: مجھے عائشہ کہہ لیں۔
+  - role: assistant
+    content: عائشہ، آپ کہاں رہتی ہیں؟
+  - role: user
+    content: لاہور میں۔
+  - role: assistant
+    content: کیا آپ کے بچے ہیں؟
+  - role: user
+    content: جی، دو بچے ہیں، آٹھ اور پانچ سال کے۔
+  - role: assistant
+    content: شوہر کب سے الگ رہ رہے ہیں؟
+  - role: user
+    content: تقریباً ایک سال سے۔
+  - role: assistant
+    content: کیا وہ بچوں کا خرچہ دے رہے ہیں؟
+  - role: user
+    content: نہیں، پچاس لاکھ روپے واجب الادا ہیں اور کچھ نہیں دے رہے۔
+  - role: assistant
+    content: آپ کیا چاہتی ہیں؟
+  - role: assistant
+    content: شکریہ۔ کیا آپ کچھ اور شامل کرنا چاہیں گے؟
+  turns:
+  - user: خلع اور بچوں کا خرچہ۔
+    audio: ../../audio/family_urdu/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: نہیں، بس اتنا ہی ہے۔
+    audio: ../../audio/family_urdu/02_closing.wav
+    expect:
+    - event: function_call
+      calls:
+      - name: interview_finished

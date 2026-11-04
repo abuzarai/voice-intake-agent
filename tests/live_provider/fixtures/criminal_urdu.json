@@ -1,0 +1,78 @@
+{
+  "case": "criminal",
+  "language": "urdu",
+  "turns": [
+    {
+      "role": "user",
+      "content": "السلام علیکم"
+    },
+    {
+      "role": "assistant",
+      "content": "وعلیکم السلام۔ کیا مسئلہ ہے؟"
+    },
+    {
+      "role": "user",
+      "content": "پولیس نے میرے بیٹے کو حراست میں لیا ہے اور ایف آئی آر درج نہیں کی۔"
+    },
+    {
+      "role": "assistant",
+      "content": "آپ کا پسندیدہ نام کیا ہے؟"
+    },
+    {
+      "role": "user",
+      "content": "مجھے رشید کہہ لیں۔"
+    },
+    {
+      "role": "assistant",
+      "content": "یہ کب اور کہاں ہوا؟"
+    },
+    {
+      "role": "user",
+      "content": "کل رات گلبرگ تھانے میں۔"
+    },
+    {
+      "role": "assistant",
+      "content": "کیا آپ نے کوئی وکیل کیا؟"
+    },
+    {
+      "role": "user",
+      "content": "نہیں، ابھی تک کچھ نہیں کیا۔"
+    },
+    {
+      "role": "assistant",
+      "content": "بیٹے کا نام کیا ہے؟"
+    },
+    {
+      "role": "user",
+      "content": "اس کا نام بلال ہے۔"
+    },
+    {
+      "role": "assistant",
+      "content": "آپ کیا چاہتے ہیں؟"
+    },
+    {
+      "role": "user",
+      "content": "فوری رہائی اور ایف آئی آر۔"
+    }
+  ],
+  "expect": {
+    "legal_domain": "criminal_law",
+    "primary_language": "urdu",
+    "urgency_any": [
+      "high"
+    ],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "desired_outcome"
+    ],
+    "facts_absent": [
+      "documentation",
+      "financial_impact"
+    ]
+  }
+}

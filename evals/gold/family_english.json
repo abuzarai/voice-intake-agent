@@ -1,0 +1,22 @@
+{
+  "legal_domain": "family_law",
+  "primary_language": "english",
+  "urgency_any": [
+    "medium",
+    "high"
+  ],
+  "facts_present": [
+    "alias_name",
+    "issue_category",
+    "issue_description",
+    "parties",
+    "location",
+    "timeline",
+    "financial_impact",
+    "desired_outcome"
+  ],
+  "facts_absent": [
+    "documentation"
+  ],
+  "amount": 5000000
+}

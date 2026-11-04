@@ -1,0 +1,46 @@
+name: criminal_urdu
+tags:
+- criminal
+- urdu
+scenarios:
+- name: replay
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: السلام علیکم
+  - role: assistant
+    content: وعلیکم السلام۔ کیا مسئلہ ہے؟
+  - role: user
+    content: پولیس نے میرے بیٹے کو حراست میں لیا ہے اور ایف آئی آر درج نہیں کی۔
+  - role: assistant
+    content: آپ کا پسندیدہ نام کیا ہے؟
+  - role: user
+    content: مجھے رشید کہہ لیں۔
+  - role: assistant
+    content: یہ کب اور کہاں ہوا؟
+  - role: user
+    content: کل رات گلبرگ تھانے میں۔
+  - role: assistant
+    content: کیا آپ نے کوئی وکیل کیا؟
+  - role: user
+    content: نہیں، ابھی تک کچھ نہیں کیا۔
+  - role: assistant
+    content: بیٹے کا نام کیا ہے؟
+  - role: user
+    content: اس کا نام بلال ہے۔
+  - role: assistant
+    content: آپ کیا چاہتے ہیں؟
+  turns:
+  - user: فوری رہائی اور ایف آئی آر۔
+    audio: ../../audio/criminal_urdu/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: نہیں، بس اتنا ہی ہے۔
+    audio: ../../audio/criminal_urdu/02_closing.wav
+  - expect:
+    - event: function_call
+      calls:
+      - name: propose_draft

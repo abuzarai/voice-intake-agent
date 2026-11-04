@@ -1,0 +1,55 @@
+{
+  "case": "correction",
+  "language": "english",
+  "turns": [
+    {
+      "role": "user",
+      "content": "Hello"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello. What legal help do you need?"
+    },
+    {
+      "role": "user",
+      "content": "My business partner owes me money."
+    },
+    {
+      "role": "assistant",
+      "content": "How much does he owe?"
+    },
+    {
+      "role": "user",
+      "content": "Two lakh rupees."
+    },
+    {
+      "role": "assistant",
+      "content": "Anything else?"
+    },
+    {
+      "role": "user",
+      "content": "Actually, I checked again. It is five lakh rupees, not two."
+    }
+  ],
+  "expect": {
+    "legal_domain_any": [
+      "civil_law",
+      "corporate_law"
+    ],
+    "primary_language": "english",
+    "urgency_any": [
+      "low",
+      "medium"
+    ],
+    "facts_present": [
+      "issue_category",
+      "issue_description",
+      "financial_impact"
+    ],
+    "facts_absent": [
+      "documentation"
+    ],
+    "amount": 500000,
+    "require_first": true
+  }
+}

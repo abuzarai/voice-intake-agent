@@ -55,3 +55,6 @@ logs/
 .ruff_cache/
 .coverage
 htmlcov/
+# Eval run artifacts and caller recordings (fetched in CI)
+evals/report.json
+evals/audio/

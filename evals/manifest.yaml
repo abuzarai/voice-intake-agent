@@ -1,0 +1,29 @@
+# Eval corpus. `smoke` runs on every pull request; `full` runs nightly.
+# One bot process per case, so a scenario never inherits another's state.
+repeats: 3
+# Behaviour cases measure whether the agent closes the interview. They are
+# reported as pass rates, never gated: closure is the agent's etiquette, and a
+# flake here must not block an extraction result.
+behaviour:
+  - correction
+  - family_urdu
+  - injection
+# `injection` stays in the full split only: the agent keeps interviewing after
+# a refusal instead of closing, which is a finding to fix, not a PR gate.
+smoke:
+  - correction
+  - family_urdu
+full:
+  - correction
+  - family_urdu
+  - family_english
+  - family_mixed
+  - property_urdu
+  - property_english
+  - property_mixed
+  - criminal_urdu
+  - criminal_english
+  - criminal_mixed
+  - injection
+  - refusal
+  - partial_refusal

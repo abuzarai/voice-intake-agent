@@ -1,0 +1,20 @@
+{
+  "legal_domain_any": [
+    "property_law",
+    "civil_law"
+  ],
+  "primary_language": "english",
+  "urgency_any": [
+    "low",
+    "medium"
+  ],
+  "facts_present": [
+    "issue_category",
+    "issue_description"
+  ],
+  "facts_absent": [
+    "alias_name",
+    "financial_impact",
+    "documentation"
+  ]
+}

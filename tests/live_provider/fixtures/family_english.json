@@ -1,0 +1,38 @@
+{
+  "case": "family",
+  "language": "english",
+  "turns": [
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hello. What kind of legal help do you need?"},
+    {"role": "user", "content": "My husband has left me. I want a khula divorce."},
+    {"role": "assistant", "content": "Understood. What should I call you?"},
+    {"role": "user", "content": "You can call me Ayesha."},
+    {"role": "assistant", "content": "Where do you live, Ayesha?"},
+    {"role": "user", "content": "In Lahore."},
+    {"role": "assistant", "content": "Do you have children?"},
+    {"role": "user", "content": "Yes, two children, eight and five years old."},
+    {"role": "assistant", "content": "How long has your husband been away?"},
+    {"role": "user", "content": "About a year."},
+    {"role": "assistant", "content": "Is he paying child maintenance?"},
+    {"role": "user", "content": "No, fifty lakh rupees is owed and he pays nothing."},
+    {"role": "assistant", "content": "What do you want?"},
+    {"role": "user", "content": "A khula and child maintenance."}
+  ],
+  "expect": {
+    "legal_domain": "family_law",
+    "primary_language": "english",
+    "urgency_any": ["medium", "high"],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "financial_impact",
+      "desired_outcome"
+    ],
+    "facts_absent": ["documentation"],
+    "amount": 5000000
+  }
+}

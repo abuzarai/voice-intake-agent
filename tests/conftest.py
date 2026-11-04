@@ -19,7 +19,7 @@ from tests.support import Adapter, Clock, registry
 
 
 def pytest_collection_modifyitems(items):
-    layers = {"unit", "integration", "sdk"}
+    layers = {"unit", "integration", "sdk", "provider"}
     for item in items:
         assigned = {mark.name for mark in item.iter_markers()} & layers
         if len(assigned) != 1:

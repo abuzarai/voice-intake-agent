@@ -1,0 +1,46 @@
+name: criminal_english
+tags:
+- criminal
+- english
+scenarios:
+- name: replay
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: Hello
+  - role: assistant
+    content: Hello. What happened?
+  - role: user
+    content: Police have detained my son and no FIR has been registered.
+  - role: assistant
+    content: What should I call you?
+  - role: user
+    content: Call me Rashid.
+  - role: assistant
+    content: When and where did this happen?
+  - role: user
+    content: Last night at Gulberg police station.
+  - role: assistant
+    content: Have you contacted a lawyer?
+  - role: user
+    content: No, nothing yet.
+  - role: assistant
+    content: What is your son's name?
+  - role: user
+    content: His name is Bilal.
+  - role: assistant
+    content: What do you want?
+  turns:
+  - user: His immediate release and an FIR.
+    audio: ../../audio/criminal_english/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: No, that is all.
+    audio: ../../audio/criminal_english/02_closing.wav
+  - expect:
+    - event: function_call
+      calls:
+      - name: propose_draft
