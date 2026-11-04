@@ -1,0 +1,37 @@
+name: correction
+tags:
+- correction
+- english
+- behaviour
+scenarios:
+- name: closure
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: Hello
+  - role: assistant
+    content: Hello. What legal help do you need?
+  - role: user
+    content: My business partner owes me money.
+  - role: assistant
+    content: How much does he owe?
+  - role: user
+    content: Two lakh rupees.
+  - role: assistant
+    content: Anything else?
+  - role: assistant
+    content: Thank you. Is there anything else you would like to add?
+  turns:
+  - user: Actually, I checked again. It is five lakh rupees, not two.
+    audio: ../../audio/correction/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: No, that is all.
+    audio: ../../audio/correction/02_closing.wav
+    expect:
+    - event: function_call
+      calls:
+      - name: interview_finished

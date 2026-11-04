@@ -1,0 +1,38 @@
+{
+  "case": "property",
+  "language": "english",
+  "turns": [
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hello. What kind of legal help do you need?"},
+    {"role": "user", "content": "My father passed away and the inheritance was not distributed."},
+    {"role": "assistant", "content": "What should I call you?"},
+    {"role": "user", "content": "Call me Kamran."},
+    {"role": "assistant", "content": "Where is the property?"},
+    {"role": "user", "content": "In Lahore, there is one plot."},
+    {"role": "assistant", "content": "How many heirs are there?"},
+    {"role": "user", "content": "Three sons and two daughters."},
+    {"role": "assistant", "content": "When did your father pass away?"},
+    {"role": "user", "content": "Two years ago."},
+    {"role": "assistant", "content": "What is the property worth?"},
+    {"role": "user", "content": "About fifty lakh rupees."},
+    {"role": "assistant", "content": "What do you want?"},
+    {"role": "user", "content": "My rightful share of the property."}
+  ],
+  "expect": {
+    "legal_domain_any": ["property_law", "family_law"],
+    "primary_language": "english",
+    "urgency_any": ["low", "medium"],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "financial_impact",
+      "desired_outcome"
+    ],
+    "facts_absent": ["documentation"],
+    "amount": 5000000
+  }
+}

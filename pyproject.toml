@@ -27,6 +27,7 @@ markers = [
     "unit: isolated domain, validation, registry and controller behavior",
     "integration: in-process application components, ASGI and import isolation; fake media/provider",
     "sdk: pinned SDK component/compatibility checks; no sockets or provider calls",
+    "provider: live Gemini Live session; requires LIVE_EVAL_GEMINI_KEY and LIVE_EVAL_MODEL",
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
@@ -45,9 +46,10 @@ select = ["E4", "E7", "E9", "F", "I"]
 "app/adapters/pipecat_live/pipeline.py" = ["E402"]
 "app/adapters/pipecat_live/gemini.py" = ["E402"]
 "app/adapters/pipecat_live/tools.py" = ["E402"]
+"evals/bot.py" = ["E402"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "tests"]
+known-first-party = ["app", "tests", "evals"]
 
 [tool.ruff.format]
 quote-style = "double"

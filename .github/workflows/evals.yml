@@ -1,0 +1,39 @@
+name: Evaluations
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      LIVE_EVAL_GEMINI_KEY: ${{ secrets.LIVE_EVAL_GEMINI_KEY }}
+      LIVE_EVAL_MODEL: ${{ secrets.LIVE_EVAL_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.1"
+          python-version: "3.12"
+      - run: uv sync --frozen --group dev
+      - name: Restore caller recordings
+        env:
+          EVAL_AUDIO_URL: ${{ secrets.EVAL_AUDIO_URL }}
+        run: |
+          if [ -n "$EVAL_AUDIO_URL" ]; then
+            mkdir -p evals/audio
+            curl -fsSL "$EVAL_AUDIO_URL" | tar -xz -C evals/audio
+          fi
+      - run: uv run --no-sync python -m evals.runner --split full --repeats 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: evals/report.json
+          if-no-files-found: ignore

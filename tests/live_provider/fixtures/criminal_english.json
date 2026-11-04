@@ -1,0 +1,78 @@
+{
+  "case": "criminal",
+  "language": "english",
+  "turns": [
+    {
+      "role": "user",
+      "content": "Hello"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello. What happened?"
+    },
+    {
+      "role": "user",
+      "content": "Police have detained my son and no FIR has been registered."
+    },
+    {
+      "role": "assistant",
+      "content": "What should I call you?"
+    },
+    {
+      "role": "user",
+      "content": "Call me Rashid."
+    },
+    {
+      "role": "assistant",
+      "content": "When and where did this happen?"
+    },
+    {
+      "role": "user",
+      "content": "Last night at Gulberg police station."
+    },
+    {
+      "role": "assistant",
+      "content": "Have you contacted a lawyer?"
+    },
+    {
+      "role": "user",
+      "content": "No, nothing yet."
+    },
+    {
+      "role": "assistant",
+      "content": "What is your son's name?"
+    },
+    {
+      "role": "user",
+      "content": "His name is Bilal."
+    },
+    {
+      "role": "assistant",
+      "content": "What do you want?"
+    },
+    {
+      "role": "user",
+      "content": "His immediate release and an FIR."
+    }
+  ],
+  "expect": {
+    "legal_domain": "criminal_law",
+    "primary_language": "english",
+    "urgency_any": [
+      "high"
+    ],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "desired_outcome"
+    ],
+    "facts_absent": [
+      "documentation",
+      "financial_impact"
+    ]
+  }
+}

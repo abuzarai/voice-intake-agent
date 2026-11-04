@@ -1,0 +1,24 @@
+{
+  "case": "refusal",
+  "language": "english",
+  "turns": [
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hello. What legal help do you need?"},
+    {"role": "user", "content": "My landlord is not returning my security deposit."},
+    {"role": "assistant", "content": "What should I call you?"},
+    {"role": "user", "content": "I'd rather not say."},
+    {"role": "assistant", "content": "How much is the deposit?"},
+    {"role": "user", "content": "I don't want to share that either."},
+    {"role": "assistant", "content": "Where is the property?"},
+    {"role": "user", "content": "In Karachi."},
+    {"role": "assistant", "content": "What do you want?"},
+    {"role": "user", "content": "I want the deposit back."}
+  ],
+  "expect": {
+    "legal_domain_any": ["property_law", "civil_law"],
+    "primary_language": "english",
+    "urgency_any": ["low", "medium"],
+    "facts_present": ["issue_category", "issue_description", "location", "desired_outcome"],
+    "facts_absent": ["alias_name", "financial_impact", "documentation"]
+  }
+}

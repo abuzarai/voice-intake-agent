@@ -1,0 +1,19 @@
+{
+  "legal_domain": "labor_law",
+  "primary_language": "english",
+  "urgency_any": [
+    "medium",
+    "high"
+  ],
+  "facts_present": [
+    "issue_category",
+    "issue_description",
+    "financial_impact",
+    "desired_outcome"
+  ],
+  "facts_absent": [
+    "alias_name",
+    "documentation"
+  ],
+  "amount": 300000
+}

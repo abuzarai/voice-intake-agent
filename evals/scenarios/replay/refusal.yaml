@@ -1,0 +1,42 @@
+name: refusal
+tags:
+- refusal
+- english
+scenarios:
+- name: replay
+  user:
+    modality: audio
+    speech:
+      sample_rate: 16000
+  context:
+  - role: user
+    content: Hello
+  - role: assistant
+    content: Hello. What legal help do you need?
+  - role: user
+    content: My landlord is not returning my security deposit.
+  - role: assistant
+    content: What should I call you?
+  - role: user
+    content: I'd rather not say.
+  - role: assistant
+    content: How much is the deposit?
+  - role: user
+    content: I don't want to share that either.
+  - role: assistant
+    content: Where is the property?
+  - role: user
+    content: In Karachi.
+  - role: assistant
+    content: What do you want?
+  turns:
+  - user: I want the deposit back.
+    audio: ../../audio/refusal/01_answer.wav
+    send_after:
+      delay_ms: 1500
+  - user: No, that is all.
+    audio: ../../audio/refusal/02_closing.wav
+  - expect:
+    - event: function_call
+      calls:
+      - name: propose_draft

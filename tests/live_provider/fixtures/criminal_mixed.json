@@ -1,0 +1,81 @@
+{
+  "case": "criminal",
+  "language": "mixed",
+  "turns": [
+    {
+      "role": "user",
+      "content": "Assalam o alaikum"
+    },
+    {
+      "role": "assistant",
+      "content": "Walaikum assalam. Kya masla hai?"
+    },
+    {
+      "role": "user",
+      "content": "Police ne mere bete ko custody mein liya hai aur FIR register nahi ki."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap ka preferred name kya hai?"
+    },
+    {
+      "role": "user",
+      "content": "Mujhe Rashid keh lein."
+    },
+    {
+      "role": "assistant",
+      "content": "Yeh kab aur kahan hua?"
+    },
+    {
+      "role": "user",
+      "content": "Kal raat Gulberg thane mein."
+    },
+    {
+      "role": "assistant",
+      "content": "Kya aap ne koi lawyer kiya?"
+    },
+    {
+      "role": "user",
+      "content": "Nahi, abhi tak kuch nahi kiya."
+    },
+    {
+      "role": "assistant",
+      "content": "Bete ka naam kya hai?"
+    },
+    {
+      "role": "user",
+      "content": "Us ka naam Bilal hai."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap kya chahte hain?"
+    },
+    {
+      "role": "user",
+      "content": "Fori release aur FIR."
+    }
+  ],
+  "expect": {
+    "legal_domain": "criminal_law",
+    "urgency_any": [
+      "high"
+    ],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "desired_outcome"
+    ],
+    "facts_absent": [
+      "documentation",
+      "financial_impact"
+    ],
+    "primary_language_any": [
+      "mixed",
+      "urdu"
+    ]
+  }
+}

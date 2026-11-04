@@ -1,0 +1,91 @@
+{
+  "case": "property",
+  "language": "mixed",
+  "turns": [
+    {
+      "role": "user",
+      "content": "Assalam o alaikum"
+    },
+    {
+      "role": "assistant",
+      "content": "Walaikum assalam. Kya legal help chahiye?"
+    },
+    {
+      "role": "user",
+      "content": "Mere father ka inteqal ho gaya aur inheritance divide nahi hui."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap ka preferred name kya hai?"
+    },
+    {
+      "role": "user",
+      "content": "Mujhe Kamran keh lein."
+    },
+    {
+      "role": "assistant",
+      "content": "Property kahan hai?"
+    },
+    {
+      "role": "user",
+      "content": "Lahore mein, ek plot hai."
+    },
+    {
+      "role": "assistant",
+      "content": "Kitne heirs hain?"
+    },
+    {
+      "role": "user",
+      "content": "Teen betay aur do betiyan."
+    },
+    {
+      "role": "assistant",
+      "content": "Father ka inteqal kab hua?"
+    },
+    {
+      "role": "user",
+      "content": "Two years ago."
+    },
+    {
+      "role": "assistant",
+      "content": "Property ki value kitni hai?"
+    },
+    {
+      "role": "user",
+      "content": "About 50 lakh rupees."
+    },
+    {
+      "role": "assistant",
+      "content": "Aap kya chahte hain?"
+    },
+    {
+      "role": "user",
+      "content": "Property mein mera rightful share."
+    }
+  ],
+  "expect": {
+    "legal_domain_any": ["property_law", "family_law"],
+    "urgency_any": [
+      "low",
+      "medium"
+    ],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "financial_impact",
+      "desired_outcome"
+    ],
+    "facts_absent": [
+      "documentation"
+    ],
+    "amount": 5000000,
+    "primary_language_any": [
+      "mixed",
+      "urdu"
+    ]
+  }
+}

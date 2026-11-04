@@ -1,0 +1,21 @@
+{
+  "legal_domain_any": [
+    "civil_law",
+    "corporate_law"
+  ],
+  "primary_language": "english",
+  "urgency_any": [
+    "low",
+    "medium"
+  ],
+  "facts_present": [
+    "issue_category",
+    "issue_description",
+    "financial_impact"
+  ],
+  "facts_absent": [
+    "documentation"
+  ],
+  "amount": 500000,
+  "require_first": true
+}

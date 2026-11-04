@@ -1,0 +1,20 @@
+{
+  "legal_domain": "criminal_law",
+  "primary_language": "english",
+  "urgency_any": [
+    "high"
+  ],
+  "facts_present": [
+    "alias_name",
+    "issue_category",
+    "issue_description",
+    "parties",
+    "location",
+    "timeline",
+    "desired_outcome"
+  ],
+  "facts_absent": [
+    "documentation",
+    "financial_impact"
+  ]
+}

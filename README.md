@@ -93,3 +93,4 @@ are maintained with the webapp.
 - [API contract](docs/contracts.md)
 - [Transcript events and batch reads](docs/transcripts.md)
 - [Architecture](docs/architecture.md)
+- [Evaluations](docs/evals.md)

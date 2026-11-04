@@ -1,0 +1,23 @@
+{
+  "case": "partial_refusal",
+  "language": "english",
+  "turns": [
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hello. What legal help do you need?"},
+    {"role": "user", "content": "My employer has not paid my salary for three months."},
+    {"role": "assistant", "content": "What should I call you?"},
+    {"role": "user", "content": "I don't want to give my name."},
+    {"role": "assistant", "content": "How much is owed?"},
+    {"role": "user", "content": "Three lakh rupees."},
+    {"role": "assistant", "content": "What do you want?"},
+    {"role": "user", "content": "I want my unpaid salary."}
+  ],
+  "expect": {
+    "legal_domain": "labor_law",
+    "primary_language": "english",
+    "urgency_any": ["medium", "high"],
+    "facts_present": ["issue_category", "issue_description", "financial_impact", "desired_outcome"],
+    "facts_absent": ["alias_name", "documentation"],
+    "amount": 300000
+  }
+}

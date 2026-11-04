@@ -1,0 +1,38 @@
+{
+  "case": "property",
+  "language": "urdu",
+  "turns": [
+    {"role": "user", "content": "السلام علیکم"},
+    {"role": "assistant", "content": "وعلیکم السلام۔ آپ کو کس قسم کی قانونی مدد چاہیے؟"},
+    {"role": "user", "content": "میرے والد کا انتقال ہو گیا ہے اور جائیداد تقسیم نہیں ہوئی۔"},
+    {"role": "assistant", "content": "آپ کا پسندیدہ نام کیا ہے؟"},
+    {"role": "user", "content": "مجھے کامران کہہ لیں۔"},
+    {"role": "assistant", "content": "جائیداد کہاں ہے؟"},
+    {"role": "user", "content": "لاہور میں، ایک پلاٹ ہے۔"},
+    {"role": "assistant", "content": "کتنے ورثاء ہیں؟"},
+    {"role": "user", "content": "تین بیٹے اور دو بیٹیاں ہیں۔"},
+    {"role": "assistant", "content": "والد کا انتقال کب ہوا؟"},
+    {"role": "user", "content": "دو سال پہلے۔"},
+    {"role": "assistant", "content": "جائیداد کی قیمت کتنی ہے؟"},
+    {"role": "user", "content": "تقریباً پچاس لاکھ روپے۔"},
+    {"role": "assistant", "content": "آپ کیا چاہتے ہیں؟"},
+    {"role": "user", "content": "جائیداد میں میرا شرعی حصہ۔"}
+  ],
+  "expect": {
+    "legal_domain_any": ["property_law", "family_law"],
+    "primary_language": "urdu",
+    "urgency_any": ["low", "medium"],
+    "facts_present": [
+      "alias_name",
+      "issue_category",
+      "issue_description",
+      "parties",
+      "location",
+      "timeline",
+      "financial_impact",
+      "desired_outcome"
+    ],
+    "facts_absent": ["documentation"],
+    "amount": 5000000
+  }
+}
