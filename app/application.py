@@ -42,6 +42,10 @@ def create_app(
 
     @application.get("/health", include_in_schema=False)
     async def health():
-        return {"status": "alive", "scope": "local-network-only"}
+        return {
+            "status": "alive",
+            "scope": "local-network-only",
+            "busy": services.live_runtime.busy,
+        }
 
     return application

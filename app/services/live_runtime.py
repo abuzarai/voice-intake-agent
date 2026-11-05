@@ -209,6 +209,15 @@ class LiveRuntime:
         await self._sleep(max(0, call.deadline - self._monotonic()))
         self._request_close(call, PartialReason.TIMEOUT)
 
+    @property
+    def busy(self):
+        """Whether a call is active or still cleaning up.
+
+        Deploy tooling asks this before replacing the runtime: a restart
+        during a call drops the caller with no recovery.
+        """
+        return self._active is not None
+
     def _live(self, call):
         return (
             self._active is call

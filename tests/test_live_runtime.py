@@ -57,6 +57,24 @@ async def test_unsupported_python_or_optional_deps_refused_before_reservation_im
 
 
 @pytest.mark.asyncio
+async def test_busy_tracks_the_active_call():
+    _, sessions, adapter, runtime, first, _ = setup()
+    assert runtime.busy is False
+    adapter.peer.gate = asyncio.Event()
+    pending = asyncio.create_task(
+        runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    )
+    await asyncio.wait_for(adapter.peer.initialized.wait(), timeout=5)
+    assert runtime.busy is True
+    adapter.peer.gate.set()
+    await pending
+    sessions.stop(first.session_id, first.capability)
+    await runtime.drain_session(first.session_id)
+    assert runtime.busy is False
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
 async def test_reserve_before_initialize_race_authorization_and_no_replay():
     _, sessions, adapter, runtime, first, second = setup()
     adapter.peer.gate = asyncio.Event()

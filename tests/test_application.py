@@ -52,7 +52,9 @@ def test_empty_compose_options_leave_disabled_service_unconfigured(blank):
     assert settings.LIVE_API_KEY is None
     assert settings.LIVE_MODEL is None
     with TestClient(create_app(settings)) as client:
-        assert client.get("/health").status_code == 200
+        health = client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["busy"] is False
         assert issue(client, "fictional-not-configured").status_code == 404
 
 
