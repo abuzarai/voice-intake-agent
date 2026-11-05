@@ -27,7 +27,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: abuzarai/insafdaar-webapp/.github/actions/deploy-service@a6ec3e18aa887b21e2a647121daa906806c6f683
+      - uses: abuzarai/insafdaar-webapp/.github/actions/deploy-service@f3580dce0470e74157a658c3f27fd8d8c0788fb2
         with:
           service: voice
         env:
