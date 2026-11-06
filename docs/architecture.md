@@ -83,6 +83,16 @@ arguments and stages the result privately. Publication requires result callback
 completion, same-session context forwarding and runtime ownership revalidation.
 No extra inference session is created.
 
+Completion is a separate handshake. After an accepted `interview_finished`
+result is forwarded on the same call, the model gives one short closing turn. A
+downstream observer reports the closing capture, bot speech boundaries and
+non-silent output audio. The runtime sends the advisory `interview_finished`
+event only after a non-empty capture, a bot stop, and a best-effort audio-drain
+estimate plus a short grace. The wait is bounded and compressed before the call
+deadline; a new user turn after a post-tool closing capture, Stop, deadline or
+failure cancels it. The event does
+not prove playback or a saved interview.
+
 ## Host application boundary
 
 The authenticated host application obtains capabilities and keeps them on the

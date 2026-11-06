@@ -14,7 +14,10 @@ confirmation and submission.
    session capability. Provider credentials stay on the server.
 2. The browser connects through WebRTC. The service opens one Gemini Live session
    and requests a brief welcome and first question before waiting for user speech.
-   Transcript events are published as conversation turns are captured.
+   Transcript events are published as conversation turns are captured. On a
+   clear closure the agent gives one short closing line; the service sends an
+   advisory finish event only after that line is captured and its audio has been
+   handed off.
 3. Prepare stops interview input and requests a structured proposal on the same
    provider session. The application reads and saves the proposal for review.
 4. Stop closes the call and discards its proposal. Saved case data remains the

@@ -10,6 +10,14 @@ from pipecat.frames.frames import FunctionCallResultProperties
 
 from app.services.live_audio_draft import TOOL_NAME
 
+CLOSING_INSTRUCTION = (
+    "This completion result is a new reply. Ignore any instruction to append it "
+    "to the previous reply. Say exactly one short closing sentence in the "
+    "caller's language: thank them, say the interview is complete, and say the "
+    "information will be reviewed. Do not ask a question, do not call a tool, "
+    "and do not claim the information was saved, confirmed, filed or decided."
+)
+
 
 def bind_tools(
     service, controller, fail, finished, reserve_finished, completion_forwarded
@@ -47,9 +55,12 @@ def bind_tools(
             if forwarded and finished is not None:
                 finished()
 
+        result = {"accepted": bool(accepted)}
+        if accepted:
+            result["closing_instruction"] = CLOSING_INSTRUCTION
         try:
             await params.result_callback(
-                {"accepted": bool(accepted)},
+                result,
                 properties=FunctionCallResultProperties(
                     run_llm=False,
                     on_context_updated=context_updated if accepted else None,

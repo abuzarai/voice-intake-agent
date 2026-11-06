@@ -7,7 +7,10 @@ from app.adapters.pipecat_live._activation import activate
 activate()
 
 from aiortc.sdp import candidate_from_sdp
+from pipecat.audio.utils import is_silence
 from pipecat.frames.frames import (
+    BotStartedSpeakingFrame,
+    BotStoppedSpeakingFrame,
     InputAudioRawFrame,
     InputTextRawFrame,
     InputTransportMessageFrame,
@@ -80,6 +83,44 @@ class InputContract(FrameProcessor):
         await self.push_frame(frame, direction)
 
 
+class OutputObserver(FrameProcessor):
+    """Reports downstream speech boundaries and non-silent output audio."""
+
+    def __init__(self, *, started=None, stopped=None, audio=None):
+        super().__init__()
+        self._started = started
+        self._stopped = stopped
+        self._audio = audio
+        self._speaking = False
+
+    @staticmethod
+    def _notify(callback, *args):
+        if callback is None:
+            return
+        try:
+            callback(*args)
+        except Exception:
+            pass
+
+    async def process_frame(self, frame, direction):
+        await super().process_frame(frame, direction)
+        if direction == FrameDirection.DOWNSTREAM:
+            if isinstance(frame, BotStartedSpeakingFrame):
+                self._speaking = True
+                self._notify(self._started)
+            elif isinstance(frame, BotStoppedSpeakingFrame):
+                self._speaking = False
+                self._notify(self._stopped)
+            elif (
+                self._speaking
+                and isinstance(frame, OutputAudioRawFrame)
+                and frame.audio
+                and not is_silence(frame.audio)
+            ):
+                self._notify(self._audio, len(frame.audio))
+        await self.push_frame(frame, direction)
+
+
 class LivePipelineWorker(PipelineWorker):
     async def _load_setup_files(self):
         """Pinned hook: never execute ambient PIPECAT_SETUP_FILES code."""
@@ -106,6 +147,10 @@ class LivePipeline:
         reserve_finished=None,
         completion_forwarded=None,
         assistant_commit=None,
+        assistant_started=None,
+        bot_started=None,
+        bot_stopped=None,
+        bot_audio=None,
     ):
         self.connection = connection
         self.config = config
@@ -116,6 +161,10 @@ class LivePipeline:
         self.finished = finished
         self.reserve_finished = reserve_finished
         self.completion_forwarded = completion_forwarded
+        self.assistant_started = assistant_started
+        self.output_observer = OutputObserver(
+            started=bot_started, stopped=bot_stopped, audio=bot_audio
+        )
         self.runner = None
         self.service = None
         self.audio_draft = audio_draft or AudioDraftController()
@@ -186,6 +235,7 @@ class LivePipeline:
                         self.service,
                         self.playback_gate,
                         transport.output(),
+                        self.output_observer,
                         assistant,
                     ]
                 ),
@@ -237,6 +287,17 @@ class LivePipeline:
                         self.commit(message.content)
                 except Exception:
                     self.fail()
+
+            @assistant.event_handler("on_assistant_turn_started")
+            async def assistant_turn_started(aggregator):
+                try:
+                    if (
+                        not self.input_gate.closed
+                        and self.assistant_started is not None
+                    ):
+                        self.assistant_started()
+                except Exception:
+                    pass
 
             @assistant.event_handler("on_assistant_turn_stopped")
             async def assistant_committed(aggregator, message):

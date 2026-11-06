@@ -140,20 +140,30 @@ after result callback and same-session context forwarding succeed and ownership
 is revalidated. Unsolicited proposal tools do not reserve an attempt.
 
 The no-argument `interview_finished` tool is advisory, not a save/confirmation or
-terminal state. After its accepted result is forwarded on the same call, the
-current peer can receive:
+terminal state. Its accepted result asks the model for one short closing
+sentence. The service does not send the browser event until that closing turn
+has a non-empty assistant capture, the bot has stopped speaking after the turn,
+and a best-effort audio-drain estimate plus a short grace have elapsed. The
+current peer can then receive:
 
 ```json
 {"label":"rtvi-ai","type":"server-message","id":"<event-id>","data":{"type":"interview_finished","sessionId":"<session-id>"}}
 ```
 
+A bounded fallback, about six seconds and compressed to leave time before the
+call deadline, sends the event without the closing line if the closing turn never
+arrives. The event means the server handed the closing audio to the transport;
+it does not prove the browser played every word. A new user turn after a post-tool
+closing capture cancels the pending event because the caller has continued the
+interview.
+
 Manual Prepare and agent-finish race through the same single-attempt reservation.
 If completion forwarding was already reserved, Prepare waits at most five seconds
 (or the remaining call deadline) for that barrier. No second attempt is created.
-Stop/deadline/disconnect can invalidate either path. Gating cannot recall already
-buffered playback and does not prove provider playback completion or audio-tail
-flush. Read and persist the ephemeral proposal through Express **before Stop**;
-Stop does not save or undo an already dispatched Express write. On unknown
-outcomes reconcile application state; never automatically readmit, replay Prepare
-or reconnect. See [architecture](architecture.md).
+Stop/deadline/disconnect can invalidate either path. A manual Prepare still gates
+input and future output and can cut a closing line that is still in progress.
+Read and persist the ephemeral proposal through Express **before Stop**; Stop
+does not save or undo an already dispatched Express write. On unknown outcomes
+reconcile application state; never automatically readmit, replay Prepare or
+reconnect. See [architecture](architecture.md).
 

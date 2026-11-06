@@ -66,6 +66,7 @@ async def aggregation_graph(pipeline, monkeypatch):
     )
     commit, fail, disconnect = Mock(), Mock(), Mock()
     assistant_commit = Mock()
+    assistant_started = Mock()
     handle = pipeline.LivePipeline(
         Mock(),
         LiveProviderConfig("offline-placeholder", "explicit-model"),
@@ -73,6 +74,7 @@ async def aggregation_graph(pipeline, monkeypatch):
         fail=fail,
         disconnect=disconnect,
         assistant_commit=assistant_commit,
+        assistant_started=assistant_started,
     )
 
     user = assistant = None
@@ -89,6 +91,7 @@ async def aggregation_graph(pipeline, monkeypatch):
             worker=Worker,
             commit=commit,
             assistant_commit=assistant_commit,
+            assistant_started=assistant_started,
             fail=fail,
             disconnect=disconnect,
         )
@@ -179,6 +182,21 @@ async def test_user_commits_only_final_aggregation_once(aggregation_graph):
     await asyncio.sleep(0)
     g.commit.assert_called_once_with("invented alias")
     g.assistant_commit.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_assistant_turn_started_is_reported_only_while_input_is_open(
+    aggregation_graph,
+):
+    g = aggregation_graph
+    await g.assistant._trigger_assistant_turn_started()
+    await asyncio.sleep(0)
+    g.assistant_started.assert_called_once()
+    g.assistant_started.reset_mock()
+    g.handle.gate_audio()
+    await g.assistant._trigger_assistant_turn_started()
+    await asyncio.sleep(0)
+    g.assistant_started.assert_not_called()
 
 
 @pytest.mark.asyncio

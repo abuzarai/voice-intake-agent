@@ -25,6 +25,12 @@ if TYPE_CHECKING:
 
 
 COMPLETION_FORWARD_TIMEOUT = 5
+COMPLETION_TIMEOUT = 6
+COMPLETION_GRACE = 0.5
+COMPLETION_HARD_CAP = 12
+COMPLETION_PREPARE_MARGIN = 1.0
+COMPLETION_RECHECK = 1.0
+OUTPUT_BYTES_PER_SECOND = 48_000
 DRAIN_WAIT_SECONDS = 3
 SHUTDOWN_WAIT_SECONDS = 20
 
@@ -86,6 +92,30 @@ class _Call:
     completion_forwarded: asyncio.Event = field(default_factory=asyncio.Event)
     completion_ok: bool = False
     completion_sent: bool = False
+    completion_pending: bool = False
+    completion_seq: int = 0
+    completion_forward_seq: int = 0
+    completion_turn_start_seq: int = 0
+    completion_capture_seq: int = 0
+    completion_bot_start_seq: int = 0
+    completion_bot_stop_seq: int = 0
+    completion_timer: asyncio.Task | None = None
+    completion_timer_at: float = 0.0
+    completion_hard_deadline: float = 0.0
+    completion_audio_started_at: float | None = None
+    completion_audio_bytes: int = 0
+    completion_bot_stopped_at: float | None = None
+    assistant_turn_active: bool = False
+    assistant_speaking: bool = False
+    bot_speaking: bool = False
+    user_seq: int = 0
+    assistant_turn_user_seq: int = 0
+    assistant_candidate_captured: bool = False
+    assistant_candidate_bot_started: bool = False
+    assistant_candidate_bot_stopped: bool = False
+    assistant_candidate_audio_started_at: float | None = None
+    assistant_candidate_audio_bytes: int = 0
+    assistant_candidate_bot_stopped_at: float | None = None
     candidate_count: int = 0
     patches: set[asyncio.Task] = field(default_factory=set)
 
@@ -138,6 +168,7 @@ class LiveRuntime:
 
     def _request_close(self, call, reason):
         self._seal_transcript(call, reason.value)
+        self._cancel_completion(call)
         call.completion_ok = False
         call.completion_forwarded.set()
         if call.audio_draft is not None:
@@ -162,6 +193,7 @@ class LiveRuntime:
                     call.startup,
                     call.runner,
                     call.preparing,
+                    call.completion_timer,
                     *call.patches,
                 )
                 if t is not None and t is not asyncio.current_task()
@@ -239,6 +271,14 @@ class LiveRuntime:
         except Exception:
             self._request_close(call, PartialReason.PROVIDER_ERROR)
             return
+        if (
+            call.completion_pending
+            and call.completion_capture_seq > call.completion_forward_seq
+        ):
+            self._cancel_completion(call)
+        call.user_seq += 1
+        call.assistant_turn_user_seq = 0
+        self._reset_assistant_candidate(call)
         self._capture(call, "user", text)
 
     def _transcript_event(self, call, data):
@@ -293,6 +333,8 @@ class LiveRuntime:
                 )
             if not was_sealed and call.transcript.sealed:
                 self._transcript_status(call)
+            if speaker == "assistant":
+                self._assistant_captured(call, text if entry is not None else "")
         except Exception:
             self._seal_transcript(call, "capture_error")
 
@@ -313,10 +355,223 @@ class LiveRuntime:
 
     def _completion_forwarded(self, call, success):
         call.completion_ok = bool(success and self._live(call))
+        if call.completion_ok:
+            call.completion_seq += 1
+            call.completion_forward_seq = call.completion_seq
+            if not (call.assistant_speaking or call.bot_speaking):
+                call.completion_seq += 1
+                call.completion_turn_start_seq = call.completion_seq
         call.completion_forwarded.set()
 
-    def _finished(self, call):
-        # Called only after same-session tool-result forwarding. Advisory only.
+    def _assistant_started(self, call):
+        call.assistant_speaking = True
+        call.assistant_turn_user_seq = call.user_seq
+        self._reset_assistant_candidate(call)
+        if not self._live(call) or not call.completion_ok or call.completion_sent:
+            return
+        call.completion_seq += 1
+        call.completion_turn_start_seq = call.completion_seq
+        call.assistant_turn_active = True
+        call.completion_capture_seq = 0
+        call.completion_bot_start_seq = 0
+        call.completion_bot_stop_seq = 0
+        call.completion_audio_started_at = None
+        call.completion_audio_bytes = 0
+
+    def _assistant_captured(self, call, text):
+        call.assistant_speaking = False
+        call.assistant_turn_active = False
+        if (
+            call.user_seq > 0
+            and call.assistant_turn_user_seq == call.user_seq
+            and text.strip()
+        ):
+            call.assistant_candidate_captured = True
+        if not self._live(call) or not call.completion_ok or call.completion_sent:
+            return
+        if not text.strip():
+            if call.completion_turn_start_seq <= call.completion_forward_seq:
+                call.completion_seq += 1
+                call.completion_turn_start_seq = call.completion_seq
+            return
+        if call.completion_turn_start_seq <= call.completion_forward_seq:
+            return
+        call.completion_seq += 1
+        call.completion_capture_seq = call.completion_seq
+        self._schedule_ready(call)
+
+    def _bot_started(self, call):
+        call.bot_speaking = True
+        if call.user_seq > 0 and call.assistant_turn_user_seq == call.user_seq:
+            call.assistant_candidate_bot_started = True
+            call.assistant_candidate_bot_stopped = False
+            call.assistant_candidate_audio_started_at = None
+            call.assistant_candidate_audio_bytes = 0
+        if (
+            not self._live(call)
+            or not call.completion_ok
+            or call.completion_sent
+            or call.completion_turn_start_seq <= call.completion_forward_seq
+        ):
+            return
+        call.completion_seq += 1
+        call.completion_bot_start_seq = call.completion_seq
+        call.completion_bot_stop_seq = 0
+        call.completion_audio_started_at = None
+        call.completion_audio_bytes = 0
+
+    def _bot_audio(self, call, num_bytes):
+        if (
+            call.user_seq > 0
+            and call.assistant_turn_user_seq == call.user_seq
+            and call.assistant_candidate_bot_started
+        ):
+            if call.assistant_candidate_audio_started_at is None:
+                call.assistant_candidate_audio_started_at = self._monotonic()
+            call.assistant_candidate_audio_bytes += num_bytes
+        if (
+            not self._live(call)
+            or not call.completion_ok
+            or call.completion_sent
+            or call.completion_turn_start_seq <= call.completion_forward_seq
+            or call.completion_bot_start_seq <= call.completion_turn_start_seq
+        ):
+            return
+        if call.completion_audio_started_at is None:
+            call.completion_audio_started_at = self._monotonic()
+        call.completion_audio_bytes += num_bytes
+
+    def _bot_stopped(self, call):
+        call.bot_speaking = False
+        if (
+            call.user_seq > 0
+            and call.assistant_turn_user_seq == call.user_seq
+            and call.assistant_candidate_bot_started
+        ):
+            call.assistant_candidate_bot_stopped = True
+            call.assistant_candidate_bot_stopped_at = self._monotonic()
+            self._schedule_ready(call)
+        if (
+            not self._live(call)
+            or not call.completion_ok
+            or call.completion_sent
+            or call.completion_bot_start_seq <= call.completion_turn_start_seq
+        ):
+            return
+        call.completion_seq += 1
+        call.completion_bot_stop_seq = call.completion_seq
+        call.completion_bot_stopped_at = self._monotonic()
+        self._schedule_ready(call)
+
+    def _completion_ready(self, call):
+        strict = (
+            call.completion_forward_seq > 0
+            and call.completion_turn_start_seq > call.completion_forward_seq
+            and call.completion_capture_seq > call.completion_turn_start_seq
+            and call.completion_bot_start_seq > call.completion_turn_start_seq
+            and call.completion_bot_stop_seq > call.completion_bot_start_seq
+            and not call.bot_speaking
+        )
+        candidate = (
+            call.user_seq > 0
+            and call.assistant_turn_user_seq == call.user_seq
+            and call.assistant_candidate_captured
+            and not call.bot_speaking
+            and (
+                not call.assistant_candidate_bot_started
+                or call.assistant_candidate_bot_stopped
+            )
+        )
+        return strict or candidate
+
+    def _completion_send_at(self, call):
+        if call.user_seq > 0 and call.assistant_turn_user_seq == call.user_seq:
+            started = call.assistant_candidate_audio_started_at
+            if started is None:
+                started = call.assistant_candidate_bot_stopped_at
+            audio_bytes = call.assistant_candidate_audio_bytes
+        else:
+            started = call.completion_audio_started_at
+            if started is None:
+                started = call.completion_bot_stopped_at
+            audio_bytes = call.completion_audio_bytes
+        if started is None:
+            started = self._monotonic()
+        return started + audio_bytes / OUTPUT_BYTES_PER_SECOND + COMPLETION_GRACE
+
+    def _reset_assistant_candidate(self, call):
+        call.assistant_candidate_captured = False
+        call.assistant_candidate_bot_started = False
+        call.assistant_candidate_bot_stopped = False
+        call.assistant_candidate_audio_started_at = None
+        call.assistant_candidate_audio_bytes = 0
+        call.assistant_candidate_bot_stopped_at = None
+
+    def _schedule_ready(self, call):
+        if not call.completion_pending or not self._completion_ready(call):
+            return
+        self._schedule_completion(
+            call, max(0, self._completion_send_at(call) - self._monotonic())
+        )
+
+    def _schedule_completion(self, call, delay):
+        now = self._monotonic()
+        target = now + min(max(0, delay), max(0, call.completion_hard_deadline - now))
+        current = call.completion_timer
+        if (
+            current is not None
+            and not current.done()
+            and target >= call.completion_timer_at
+        ):
+            return
+        if current is not None and not current.done():
+            current.cancel()
+        call.completion_timer_at = target
+        call.completion_timer = self._task(self._completion_after(call, target - now))
+
+    async def _completion_after(self, call, delay):
+        await self._sleep(max(0, delay))
+        if call.completion_timer is not asyncio.current_task():
+            return
+        call.completion_timer = None
+        call.completion_timer_at = 0.0
+        self._maybe_send_completion(call)
+
+    def _maybe_send_completion(self, call):
+        if (
+            not call.completion_pending
+            or not call.completion_ok
+            or call.completion_sent
+        ):
+            return
+        if call.preparing is not None:
+            self._cancel_completion(call)
+            return
+        if not self._completion_live(call):
+            return
+        if self._completion_ready(call):
+            now = self._monotonic()
+            send_at = self._completion_send_at(call)
+            if now < send_at and now < call.completion_hard_deadline:
+                self._schedule_completion(call, send_at - now)
+                return
+            self._send_finished(call)
+            return
+        if call.bot_speaking or call.assistant_turn_active:
+            remaining = call.completion_hard_deadline - self._monotonic()
+            if remaining > 0:
+                self._schedule_completion(call, min(COMPLETION_RECHECK, remaining))
+                return
+        self._send_finished(call)
+
+    def _cancel_completion(self, call):
+        call.completion_pending = False
+        call.assistant_turn_active = False
+        if call.completion_timer is not None and not call.completion_timer.done():
+            call.completion_timer.cancel()
+        call.completion_timer_at = 0.0
+
+    def _send_finished(self, call):
         if (
             not self._completion_live(call)
             or not call.completion_reserved
@@ -324,15 +579,49 @@ class LiveRuntime:
             or call.completion_sent
         ):
             return False
+        if call.preparing is not None:
+            self._cancel_completion(call)
+            return False
         call.completion_sent = True
-        call.connection.send_app_message(
-            {
-                "label": "rtvi-ai",
-                "type": "server-message",
-                "id": uuid4().hex,
-                "data": {"type": "interview_finished", "sessionId": call.session_id},
-            }
+        self._cancel_completion(call)
+        try:
+            call.connection.send_app_message(
+                {
+                    "label": "rtvi-ai",
+                    "type": "server-message",
+                    "id": uuid4().hex,
+                    "data": {
+                        "type": "interview_finished",
+                        "sessionId": call.session_id,
+                    },
+                }
+            )
+        except Exception:
+            pass
+        return True
+
+    def _finished(self, call):
+        if (
+            not self._completion_live(call)
+            or not call.completion_reserved
+            or not call.completion_ok
+            or call.completion_sent
+            or call.completion_pending
+        ):
+            return False
+        now = self._monotonic()
+        call.completion_pending = True
+        call.completion_hard_deadline = min(
+            call.deadline - COMPLETION_PREPARE_MARGIN,
+            now + COMPLETION_HARD_CAP,
         )
+        if call.completion_hard_deadline <= now:
+            self._send_finished(call)
+            return True
+        self._schedule_completion(
+            call, min(COMPLETION_TIMEOUT, call.completion_hard_deadline - now)
+        )
+        self._schedule_ready(call)
         return True
 
     async def offer(self, session_id, capability, sdp, config):
@@ -433,6 +722,10 @@ class LiveRuntime:
             completion_forwarded=lambda success: self._completion_forwarded(
                 call, success
             ),
+            assistant_started=lambda: self._assistant_started(call),
+            bot_started=lambda: self._bot_started(call),
+            bot_stopped=lambda: self._bot_stopped(call),
+            bot_audio=lambda num_bytes: self._bot_audio(call, num_bytes),
         )
         call.runner = self._task(self._run(call))
         await asyncio.sleep(0)

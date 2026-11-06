@@ -22,6 +22,16 @@ def test_product_prompt_uses_user_facts_not_a_fictional_roleplay(gemini, pipelin
     assert "fictional legal intake" not in gemini.PROMPT
     assert "Use only invented facts" not in gemini.PROMPT
     assert "those require the application's controls" in gemini.PROMPT
+    assert "one short closing" in gemini.PROMPT
+    assert "new reply" in gemini.PROMPT
+
+
+def test_async_tool_instruction_is_pinned_for_the_closing_override():
+    from pipecat.processors.aggregators.async_tool_messages import (
+        ASYNC_TOOL_INSTRUCTIONS,
+    )
+
+    assert "never as a reply of its own" in ASYNC_TOOL_INSTRUCTIONS
 
 
 def test_public_signaling_seams_are_pinned_and_empty_candidate_supported(pipeline):
@@ -455,6 +465,42 @@ async def test_audio_prepare_closes_app_gates_before_pause_and_uses_same_service
 
 
 @pytest.mark.asyncio
+async def test_output_observer_reports_downstream_speech_and_non_silent_audio(pipeline):
+    from pipecat.frames.frames import (
+        BotStartedSpeakingFrame,
+        BotStoppedSpeakingFrame,
+        OutputAudioRawFrame,
+    )
+
+    started, stopped, audio = Mock(), Mock(), Mock()
+    observer = pipeline.OutputObserver(started=started, stopped=stopped, audio=audio)
+    observer.push_frame = AsyncMock()
+    downstream = pipeline.FrameDirection.DOWNSTREAM
+    upstream = pipeline.FrameDirection.UPSTREAM
+    await observer.process_frame(BotStartedSpeakingFrame(), upstream)
+    started.assert_not_called()
+    await observer.process_frame(BotStartedSpeakingFrame(), downstream)
+    started.assert_called_once_with()
+    await observer.process_frame(
+        OutputAudioRawFrame(audio=b"\x00\x00", sample_rate=24000, num_channels=1),
+        downstream,
+    )
+    audio.assert_not_called()
+    await observer.process_frame(
+        OutputAudioRawFrame(audio=b"", sample_rate=24000, num_channels=1),
+        downstream,
+    )
+    audio.assert_not_called()
+    await observer.process_frame(
+        OutputAudioRawFrame(audio=b"\xff\x7f", sample_rate=24000, num_channels=1),
+        downstream,
+    )
+    audio.assert_called_once_with(2)
+    await observer.process_frame(BotStoppedSpeakingFrame(), downstream)
+    stopped.assert_called_once_with()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("model", ["gemini-2.5-live", "gemini-3.8-live"])
 async def test_real_graph_starts_interview_once_and_preserves_tool_roundtrip(
     gemini, pipeline, monkeypatch, model
@@ -675,7 +721,12 @@ async def test_explicit_finish_tool_validates_empty_arguments_and_suppresses_con
         )
         assert reserved.call_count == int(accepted)
         finished.assert_not_called()
-        assert result.call_args.args[0] == {"accepted": accepted}
+        value = result.call_args.args[0]
+        assert value["accepted"] is accepted
+        if accepted:
+            assert "new reply" in value["closing_instruction"]
+        else:
+            assert set(value) == {"accepted"}
         assert result.call_args.kwargs["properties"].run_llm is False
     finally:
         await service.close_sdk()

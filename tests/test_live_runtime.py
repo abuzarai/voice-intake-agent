@@ -18,6 +18,29 @@ from tests.support import CONFIG, Adapter, assert_clean, audio_setup, setup
 pytestmark = pytest.mark.integration
 
 
+async def eventually(predicate, timeout=1.0):
+    async with asyncio.timeout(timeout):
+        while not predicate():
+            await asyncio.sleep(0.001)
+
+
+async def drive_closing(adapter, text="Thank you. Your interview is complete."):
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    events["assistant_commit"](text, False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+
+
+def completion_events(adapter):
+    return [
+        item.args[0]
+        for item in adapter.peer.send_app_message.call_args_list
+        if item.args[0]["data"]["type"] == "interview_finished"
+    ]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "runtime_case", ["python311", "python313", "missing", "wrong-version"]
@@ -568,8 +591,14 @@ async def test_audio_thirty_second_budget_and_cleanup_retains_slot():
 
 
 @pytest.mark.asyncio
-async def test_completion_is_one_shot_owned_advisory_and_does_not_prepare():
-    _, sessions, adapter, runtime, first, _ = setup()
+async def test_completion_is_one_shot_owned_advisory_and_does_not_prepare(
+    monkeypatch,
+):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
     await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
     call = runtime._active
     adapter.pipe.ready = True
@@ -582,7 +611,11 @@ async def test_completion_is_one_shot_owned_advisory_and_does_not_prepare():
     adapter.pipe.events["completion_forwarded"](True)
     assert finish() is True
     assert finish() is False
-    envelope = adapter.peer.send_app_message.call_args.args[0]
+    adapter.peer.send_app_message.assert_not_called()
+    await drive_closing(adapter)
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    envelope = completion_events(adapter)[0]
     assert envelope["label"] == "rtvi-ai"
     assert envelope["type"] == "server-message"
     assert envelope["data"] == {
@@ -595,16 +628,247 @@ async def test_completion_is_one_shot_owned_advisory_and_does_not_prepare():
     sessions.stop(first.session_id, first.capability)
     await runtime.drain_session(first.session_id)
     assert finish() is False
-    completion_events = [
-        item.args[0]
-        for item in adapter.peer.send_app_message.call_args_list
-        if item.args[0]["data"]["type"] == "interview_finished"
-    ]
-    assert completion_events == [envelope]
+    assert completion_events(adapter) == [envelope]
     assert (
         adapter.peer.send_app_message.call_args.args[0]["data"]["type"]
         == "transcript_status"
     )
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_waits_for_non_empty_capture_and_bot_stop(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 1.0)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    assert adapter.pipe.events["reserve_finished"]()
+    adapter.pipe.events["completion_forwarded"](True)
+    assert adapter.pipe.events["finished"]() is True
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    await asyncio.sleep(0.02)
+    adapter.peer.send_app_message.assert_not_called()
+    events["assistant_commit"]("Thank you. Your interview is complete.", False)
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    await runtime.shutdown()
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_empty_tool_turn_stop_allows_next_closing_turn(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    assert events["reserve_finished"]()
+    events["completion_forwarded"](True)
+    assert events["finished"]() is True
+    events["assistant_commit"]("", False)
+    events["assistant_commit"]("Thank you. Your interview is complete.", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    assert len(completion_events(adapter)) == 1
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_reports_pre_tool_closing_turn(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    events = adapter.pipe.events
+    events["commit"]("No, that's all.")
+    events["assistant_started"]()
+    events["assistant_commit"]("Thank you. Your interview is complete.", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    assert events["reserve_finished"]()
+    events["completion_forwarded"](True)
+    assert events["finished"]() is True
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    assert len(completion_events(adapter)) == 1
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_early_tool_call_survives_closing_answer(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    events = adapter.pipe.events
+    events["commit"]("I think we should end this interview.")
+    events["assistant_started"]()
+    events["assistant_commit"]("Is there anything else you would like to add?", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    assert events["reserve_finished"]()
+    events["completion_forwarded"](True)
+    assert events["finished"]() is True
+    events["commit"]("No. Thanks.")
+    events["assistant_started"]()
+    events["assistant_commit"]("Thank you. Your interview is complete.", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    assert len(completion_events(adapter)) == 1
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_pre_call_speech_does_not_satisfy_completion_gate(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.05)
+    monkeypatch.setattr(module, "COMPLETION_RECHECK", 0.01)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    assert events["reserve_finished"]()
+    events["completion_forwarded"](True)
+    assert events["finished"]() is True
+    events["assistant_commit"]("pre-call speech", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    call = runtime._active
+    assert call.completion_capture_seq == 0
+    assert call.completion_bot_start_seq == 0
+    await asyncio.sleep(0.01)
+    assert not completion_events(adapter)
+    clock.seconds += 10
+    await eventually(lambda: bool(completion_events(adapter)))
+    await runtime.shutdown()
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_interruption_sends_once(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    assert adapter.pipe.events["reserve_finished"]()
+    adapter.pipe.events["completion_forwarded"](True)
+    assert adapter.pipe.events["finished"]() is True
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    events["assistant_commit"]("Thank you. Your interview is", True)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    clock.seconds += 1
+    await eventually(lambda: bool(completion_events(adapter)))
+    await asyncio.sleep(0.05)
+    assert len(completion_events(adapter)) == 1
+    await runtime.shutdown()
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_deadline_compression_sends_without_closing(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_PREPARE_MARGIN", 1.0)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    call = runtime._active
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    call.deadline = clock.seconds + 0.5
+    assert adapter.pipe.events["reserve_finished"]()
+    adapter.pipe.events["completion_forwarded"](True)
+    assert adapter.pipe.events["finished"]() is True
+    assert len(completion_events(adapter)) == 1
+    await runtime.shutdown()
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_new_user_turn_after_post_tool_closing_cancels(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.2)
+    monkeypatch.setattr(module, "COMPLETION_GRACE", 0.005)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    assert adapter.pipe.events["reserve_finished"]()
+    adapter.pipe.events["completion_forwarded"](True)
+    assert adapter.pipe.events["finished"]() is True
+    events = adapter.pipe.events
+    events["assistant_started"]()
+    events["assistant_commit"]("Thank you. Your interview is complete.", False)
+    events["bot_started"]()
+    events["bot_audio"](480)
+    events["bot_stopped"]()
+    events["commit"]("I have one more thing")
+    clock.seconds += 10
+    await asyncio.sleep(0.1)
+    assert not completion_events(adapter)
+    await runtime.shutdown()
+    await assert_clean(runtime, adapter)
+
+
+@pytest.mark.asyncio
+async def test_completion_prepare_race_cancels_pending_event(monkeypatch):
+    import app.services.live_runtime as module
+
+    monkeypatch.setattr(module, "COMPLETION_TIMEOUT", 0.05)
+    clock, sessions, adapter, runtime, first, _ = setup()
+    await runtime.offer(first.session_id, first.capability, "fictional-offer", CONFIG)
+    call = runtime._active
+    adapter.pipe.ready = True
+    adapter.peer.send_app_message = Mock()
+    assert adapter.pipe.events["reserve_finished"]()
+    adapter.pipe.events["completion_forwarded"](True)
+    assert adapter.pipe.events["finished"]() is True
+    call.preparing = asyncio.create_task(asyncio.sleep(100))
+    clock.seconds += 10
+    await asyncio.sleep(0.1)
+    assert not call.completion_pending
+    assert not completion_events(adapter)
+    await runtime.shutdown()
     await assert_clean(runtime, adapter)
 
 
